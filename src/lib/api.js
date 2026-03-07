@@ -21,11 +21,10 @@ async function request(path, options = {}) {
   return data;
 }
 
-// Auth
 export const api = {
   auth: {
-    register:   (email, password, full_name) =>
-      request('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, full_name }) }),
+    register:       (email, password, full_name) =>
+      request('/auth/register',        { method: 'POST', body: JSON.stringify({ email, password, full_name }) }),
     login:          (email, password) =>
       request('/auth/login',           { method: 'POST', body: JSON.stringify({ email, password }) }),
     googleAuth:     (id_token) =>
@@ -37,21 +36,21 @@ export const api = {
   },
 
   analyze: {
-    create: (payload) =>
-      request('/analyze', { method: 'POST', body: JSON.stringify(payload) }),
+    create:  (payload) =>
+      request('/analyze',              { method: 'POST', body: JSON.stringify(payload) }),
     getById: (id) =>
       request(`/analyze/${id}`),
-    list: (page = 1) =>
-      request(`/analyses?page=${page}`),
-    remove: (id) =>
-      request(`/analyze/${id}`, { method: 'DELETE' }),
-    share: (id) =>
-      request(`/analyze/${id}/share`, { method: 'POST' }),
+    list:    (params = {}) => {
+      const qs = new URLSearchParams(params).toString();
+      return request(`/analyses${qs ? '?' + qs : ''}`);
+    },
+    remove:  (id) =>
+      request(`/analyze/${id}`,        { method: 'DELETE' }),
+    share:   (id) =>
+      request(`/analyze/${id}/share`,  { method: 'POST' }),
   },
 
   shared: (token) => request(`/shared/${token}`),
-
-  payment: {
 
   ask: (analysis_id, question, language = 'en') =>
     request('/ask', { method: 'POST', body: JSON.stringify({ analysis_id, question, language }) }),
@@ -59,8 +58,8 @@ export const api = {
   payment: {
     initiate: (plan_type, callback_url) =>
       request('/payment/initiate', { method: 'POST', body: JSON.stringify({ plan_type, callback_url }) }),
-    verify:  (reference) => request(`/payment/verify?reference=${reference}`),
-    history: ()          => request('/payment/history'),
+    verify:   (reference) => request(`/payment/verify?reference=${reference}`),
+    history:  ()          => request('/payment/history'),
   },
 
   license: () => request('/license'),
