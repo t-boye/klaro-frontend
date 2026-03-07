@@ -50,7 +50,7 @@ export default function Navbar({ onLogout }) {
 
         {/* Logo */}
         <Link to="/dashboard" className="flex-shrink-0">
-          <img src="/assets/logos/logo.png" alt="Klaro" className="h-10 object-contain" />
+          <img src="/assets/logos/logo.png" alt="Klaro" className="h-12 object-contain" />
         </Link>
 
         {/* Desktop nav links */}

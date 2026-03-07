@@ -5,6 +5,8 @@ import { getUser, setSession, getToken, clearSession } from '../lib/auth';
 import Navbar from '../components/Navbar';
 import UpgradeModal from '../components/UpgradeModal';
 
+const PAYMENT_METHOD_LABELS = { card: 'Card', mobile_money: 'Mobile Money', bank: 'Bank' };
+
 const PLAN_LABELS = {
   trial:       'Free Trial',
   pay_per_doc: 'Pay Per Document',
@@ -36,6 +38,8 @@ export default function Profile() {
   const [saveMsg, setSaveMsg]         = useState('');
   const [saveErr, setSaveErr]         = useState('');
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [payments, setPayments]       = useState([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
 
   useEffect(() => {
     api.license()
@@ -46,6 +50,10 @@ export default function Profile() {
         setLang(data.user.language_preference || 'en');
       })
       .catch(console.error);
+    api.payment.history()
+      .then((data) => setPayments(data.payments || []))
+      .catch(() => {})
+      .finally(() => setPaymentsLoading(false));
   }, []);
 
   async function handleSave(e) {
@@ -186,6 +194,38 @@ export default function Profile() {
             {saving ? 'Saving...' : 'Save changes'}
           </button>
         </form>
+
+        {/* Payment history */}
+        <div className="card mt-5">
+          <h2 className="font-semibold text-gray-900 dark:text-white mb-3">Payment history</h2>
+          {paymentsLoading ? (
+            <div className="space-y-2 animate-pulse">
+              {[1, 2].map((i) => <div key={i} className="h-10 bg-gray-100 rounded-lg" />)}
+            </div>
+          ) : payments.length === 0 ? (
+            <p className="text-sm text-gray-400">No payments yet.</p>
+          ) : (
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              {payments.map((p) => (
+                <div key={p.id} className="py-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 capitalize">{p.plan_name || p.plan} plan</p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(p.created_at).toLocaleDateString('en-GH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {p.payment_method ? ` · ${PAYMENT_METHOD_LABELS[p.payment_method] || p.payment_method}` : ''}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">GH₵ {Number(p.amount_ghs).toFixed(2)}</p>
+                    <span className={`text-xs font-medium ${p.status === 'success' ? 'text-green-600' : 'text-yellow-600'}`}>
+                      {p.status === 'success' ? 'Paid' : p.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Danger zone */}
         <div className="card mt-5">

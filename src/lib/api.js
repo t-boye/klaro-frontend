@@ -26,8 +26,14 @@ export const api = {
   auth: {
     register:   (email, password, full_name) =>
       request('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, full_name }) }),
-    login:      (email, password) =>
-      request('/auth/login',    { method: 'POST', body: JSON.stringify({ email, password }) }),
+    login:          (email, password) =>
+      request('/auth/login',           { method: 'POST', body: JSON.stringify({ email, password }) }),
+    googleAuth:     (id_token) =>
+      request('/auth/google',          { method: 'POST', body: JSON.stringify({ id_token }) }),
+    forgotPassword: (email) =>
+      request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+    resetPassword:  (token, password) =>
+      request('/auth/reset-password',  { method: 'POST', body: JSON.stringify({ token, password }) }),
   },
 
   analyze: {
@@ -39,7 +45,13 @@ export const api = {
       request(`/analyses?page=${page}`),
     remove: (id) =>
       request(`/analyze/${id}`, { method: 'DELETE' }),
+    share: (id) =>
+      request(`/analyze/${id}/share`, { method: 'POST' }),
   },
+
+  shared: (token) => request(`/shared/${token}`),
+
+  payment: {
 
   ask: (analysis_id, question, language = 'en') =>
     request('/ask', { method: 'POST', body: JSON.stringify({ analysis_id, question, language }) }),
@@ -47,8 +59,8 @@ export const api = {
   payment: {
     initiate: (plan_type, callback_url) =>
       request('/payment/initiate', { method: 'POST', body: JSON.stringify({ plan_type, callback_url }) }),
-    verify: (reference) =>
-      request(`/payment/verify?reference=${reference}`),
+    verify:  (reference) => request(`/payment/verify?reference=${reference}`),
+    history: ()          => request('/payment/history'),
   },
 
   license: () => request('/license'),

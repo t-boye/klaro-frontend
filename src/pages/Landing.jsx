@@ -96,7 +96,13 @@ function AnalysisPreview() {
             </div>
           ))}
         </div>
-        <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#1B4332', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 700 }}>KM</div>
+        <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#1B4332', overflow: 'hidden', flexShrink: 0 }}>
+            <svg viewBox="0 0 32 32" fill="none" width="28" height="28">
+              <ellipse cx="16" cy="29" rx="11" ry="7" fill="#52B788" opacity="0.85" />
+              <circle cx="16" cy="13" r="6.5" fill="#52B788" />
+              <circle cx="14" cy="11.5" r="1.8" fill="rgba(255,255,255,0.2)" />
+            </svg>
+          </div>
       </div>
 
       <div style={{ padding: '16px 20px 24px' }}>
@@ -183,6 +189,69 @@ function AnalysisPreview() {
   );
 }
 
+// ─── Mouse Cursor ─────────────────────────────────────────────────────────────
+
+const CURSOR_WAYPOINTS = [
+  { x: 190, y: 58,  pause: 1400, click: true  },  // Analyse tab in inner nav
+  { x: 38,  y: 106, pause: 900,  click: false },  // ← back link
+  { x: 230, y: 170, pause: 1100, click: false },  // summary card
+  { x: 230, y: 275, pause: 1000, click: true  },  // first clause card
+  { x: 230, y: 345, pause: 900,  click: false },  // second clause card
+  { x: 230, y: 415, pause: 900,  click: true  },  // third clause card
+  { x: 148, y: 58,  pause: 1100, click: false },  // Dashboard tab
+];
+
+function MouseCursor() {
+  const [pos,      setPos]      = useState({ x: 190, y: 58 });
+  const [clicking, setClicking] = useState(false);
+  const idxRef = useRef(0);
+
+  useEffect(() => {
+    let t;
+    function next() {
+      const wp = CURSOR_WAYPOINTS[idxRef.current % CURSOR_WAYPOINTS.length];
+      setPos({ x: wp.x, y: wp.y });
+      if (wp.click) {
+        setTimeout(() => setClicking(true),  650);
+        setTimeout(() => setClicking(false), 970);
+      }
+      idxRef.current++;
+      t = setTimeout(next, wp.pause + 750);
+    }
+    t = setTimeout(next, 1800);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: pos.x,
+      top: pos.y,
+      zIndex: 20,
+      pointerEvents: 'none',
+      transition: 'left 0.72s cubic-bezier(0.4,0,0.2,1), top 0.72s cubic-bezier(0.4,0,0.2,1)',
+      filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.4))',
+    }}>
+      <svg
+        width="18" height="22" viewBox="0 0 18 22"
+        style={{ transform: clicking ? 'scale(0.82)' : 'scale(1)', transition: 'transform 0.1s ease', display: 'block' }}
+      >
+        <path d="M2 1l14.5 9-5.5 1.8-3.5 8.2L2 1z" fill="white" stroke="#111" strokeWidth="1.3" strokeLinejoin="round" />
+      </svg>
+      {clicking && (
+        <div style={{
+          position: 'absolute', top: -5, left: -5,
+          width: 28, height: 28,
+          border: '2px solid rgba(82,183,136,0.75)',
+          borderRadius: '50%',
+          animation: 'clickRipple 0.45s ease-out forwards',
+          pointerEvents: 'none',
+        }} />
+      )}
+    </div>
+  );
+}
+
 // ─── Browser Mockup ───────────────────────────────────────────────────────────
 
 function BrowserMockup() {
@@ -208,7 +277,7 @@ function BrowserMockup() {
               <path d="M3.5 5V3.5a2 2 0 014 0V5" stroke="#52B788" strokeWidth="1.3" strokeLinecap="round" />
             </svg>
             <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              app.klaro.gh/analysis/employment-contract-2025
+              klarogh.netlify.app/analysis/employment-contract
             </span>
           </div>
           <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 14, flexShrink: 0 }}>⇧</div>
@@ -227,6 +296,7 @@ function BrowserMockup() {
         {/* App content — always light themed */}
         <div style={{ height: 560, overflow: 'hidden', position: 'relative' }}>
           <AnalysisPreview />
+          <MouseCursor />
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(transparent, #F8FAF7)', pointerEvents: 'none' }} />
         </div>
       </div>
@@ -392,6 +462,7 @@ export default function Landing() {
         @keyframes fadeInUp       { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
         @keyframes wordExit       { from { opacity:1; transform:translateY(0) scale(1); filter:blur(0); } to { opacity:0; transform:translateY(-14px) scale(0.96); filter:blur(3px); } }
         @keyframes wordEnter      { from { opacity:0; transform:translateY(14px) scale(0.96); filter:blur(3px); } to { opacity:1; transform:translateY(0) scale(1); filter:blur(0); } }
+        @keyframes clickRipple    { from { transform:scale(0.4); opacity:1; } to { transform:scale(2); opacity:0; } }
 
         /* ── Nav links ── */
         .lnd-nav-link {
@@ -451,12 +522,13 @@ export default function Landing() {
         /* ── Responsive ── */
         @media (max-width: 768px) {
           .steps-grid   { flex-direction: column !important; }
-          .stats-row    { flex-wrap: wrap !important; }
+          .stats-row    { display: grid !important; grid-template-columns: 1fr 1fr !important; }
           .ratings-grid { grid-template-columns: 1fr 1fr !important; }
           .pricing-grid { grid-template-columns: 1fr 1fr !important; }
           .lnd-hide-mobile { display: none !important; }
-          .hero-ctas    { justify-content: center !important; }
+          .hero-ctas    { flex-direction: column !important; align-items: stretch !important; }
           .hero-trust   { justify-content: center !important; }
+          .lnd-btn-primary, .lnd-btn-ghost { width: 100%; justify-content: center; }
         }
         @media (max-width: 480px) {
           .pricing-grid { grid-template-columns: 1fr !important; }
@@ -469,7 +541,7 @@ export default function Landing() {
         <div style={{ maxWidth: 1100, margin: '0 auto', height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
 
           <Link to="/" style={{ flexShrink: 0 }}>
-            <img src="/assets/logos/logo.png" alt="Klaro" style={{ height: 42, objectFit: 'contain' }} />
+            <img src="/assets/logos/logo.png" alt="Klaro" style={{ height: 50, objectFit: 'contain' }} />
           </Link>
 
           <div className="lnd-hide-mobile" style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
@@ -503,7 +575,7 @@ export default function Landing() {
           {/* Badge */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(82,183,136,0.1)', border: '1px solid rgba(82,183,136,0.25)', borderRadius: 20, padding: '6px 16px', marginBottom: 28 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#52B788', animation: 'pulseGlow 2s infinite', display: 'inline-block' }} />
-            <span style={{ fontSize: 13, color: '#52B788', fontWeight: 600, letterSpacing: '0.01em' }}>Powered by Claude AI · Built for Ghana</span>
+            <span style={{ fontSize: 13, color: '#52B788', fontWeight: 600, letterSpacing: '0.01em' }}>Built for Ghana</span>
           </div>
 
           {/* Headline */}
@@ -715,7 +787,7 @@ export default function Landing() {
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 32, marginBottom: 40 }}>
 
             <div style={{ maxWidth: 280 }}>
-              <img src="/assets/logos/logo.png" alt="Klaro" style={{ height: 38, objectFit: 'contain', marginBottom: 12 }} />
+              <img src="/assets/logos/logo.png" alt="Klaro" style={{ height: 46, objectFit: 'contain', marginBottom: 12 }} />
               <p style={{ color: 'var(--lnd-t35)', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
                 Klaro explains legal documents. It does not give legal advice.
                 For advice on what to do, consult a qualified Ghana lawyer.
