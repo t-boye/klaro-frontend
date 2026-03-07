@@ -505,6 +505,11 @@ export default function Landing() {
           text-align: center; flex: 1; min-width: 0; transition: all 0.2s;
         }
         .stat-card:hover { background: var(--lnd-t05); border-color: rgba(82,183,136,0.2); }
+        @media (max-width: 480px) {
+          .stat-card { padding: 16px 10px; border-radius: 12px; }
+          .stat-value { font-size: 26px !important; }
+          .stat-label { font-size: 11px !important; }
+        }
         .rating-card {
           background: var(--lnd-t02); border: 1px solid var(--lnd-t06);
           border-radius: 16px; padding: 20px; transition: all 0.25s; cursor: default;
@@ -522,7 +527,7 @@ export default function Landing() {
         /* ── Responsive ── */
         @media (max-width: 768px) {
           .steps-grid   { flex-direction: column !important; }
-          .stats-row    { display: grid !important; grid-template-columns: 1fr 1fr !important; }
+          .stats-row    { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
           .ratings-grid { grid-template-columns: 1fr 1fr !important; }
           .pricing-grid { grid-template-columns: 1fr 1fr !important; }
           .lnd-hide-mobile { display: none !important; }
@@ -616,8 +621,8 @@ export default function Landing() {
       </section>
 
       {/* ── Stats bar ── */}
-      <section style={{ borderTop: '1px solid var(--lnd-t06)', borderBottom: '1px solid var(--lnd-t06)', padding: '36px 24px' }}>
-        <div className="stats-row" style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', gap: 16 }}>
+      <section style={{ borderTop: '1px solid var(--lnd-t06)', borderBottom: '1px solid var(--lnd-t06)', padding: '36px 16px' }}>
+        <div className="stats-row" style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', gap: '12px' }}>
           {[
             { value: '40+',   label: 'Document types' },
             { value: '15+',   label: 'Ghana laws covered' },
@@ -625,8 +630,8 @@ export default function Landing() {
             { value: '7',     label: 'Languages supported' },
           ].map((s) => (
             <div key={s.label} className="stat-card">
-              <p style={{ fontSize: 34, fontWeight: 900, color: '#52B788', margin: '0 0 4px', letterSpacing: '-0.02em' }}>{s.value}</p>
-              <p style={{ fontSize: 13, color: 'var(--lnd-t40)', margin: 0 }}>{s.label}</p>
+              <p className="stat-value" style={{ fontSize: 34, fontWeight: 900, color: '#52B788', margin: '0 0 4px', letterSpacing: '-0.02em' }}>{s.value}</p>
+              <p className="stat-label" style={{ fontSize: 13, color: 'var(--lnd-t40)', margin: 0 }}>{s.label}</p>
             </div>
           ))}
         </div>
