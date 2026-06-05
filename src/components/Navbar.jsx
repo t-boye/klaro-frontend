@@ -34,7 +34,7 @@ function NavItem({ to, children, onClick }) {
   );
 }
 
-export default function Navbar({ onLogout }) {
+export default function Navbar({ onLogout, wide = false }) {
   const user      = getUser();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -44,7 +44,7 @@ export default function Navbar({ onLogout }) {
 
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-10 backdrop-blur-sm">
-      <div className="max-w-2xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
+      <div className={`${wide ? 'max-w-5xl' : 'max-w-2xl'} mx-auto px-4 py-2 flex items-center justify-between gap-3`}>
 
         {/* Logo */}
         <Link to="/dashboard" className="flex-shrink-0">

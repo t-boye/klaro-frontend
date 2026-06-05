@@ -56,22 +56,26 @@ function MockNavbar({ activeTab = 'Dashboard' }) {
 
 function DashboardView({ visibleDocs }) {
   return (
-    <div style={{ fontFamily: 'Inter, system-ui, sans-serif', background: '#F8FAF7', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ fontFamily: 'Inter, system-ui, sans-serif', background: '#f9fafb', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <MockNavbar activeTab="Dashboard" />
-      <div style={{ padding: '14px 16px', flex: 1, overflow: 'hidden' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+      <div style={{ padding: '16px 20px', flex: 1, overflow: 'hidden', maxWidth: 520, width: '100%', margin: '0 auto' }}>
+
+        {/* Page header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>Good morning, Kofi 👋</p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Hi, Kofi</p>
             <p style={{ fontSize: 10, color: '#9ca3af', margin: 0 }}>Your document analyses</p>
+          </div>
+          <div style={{ background: '#1B4332', color: '#fff', borderRadius: 10, padding: '5px 12px', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 14, lineHeight: 1 }}>+</span> Analyse
           </div>
         </div>
 
         {/* Plan banner */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f0f7f3', border: '1px solid #bbf7d0', borderRadius: 12, padding: '8px 12px', marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 14, padding: '9px 14px', marginBottom: 12 }}>
           <div>
             <p style={{ fontSize: 11, fontWeight: 600, color: '#1B4332', margin: 0 }}>Free trial: 2 analyses remaining</p>
-            <p style={{ fontSize: 10, color: '#52B788', margin: 0 }}>Upgrade for unlimited access</p>
+            <p style={{ fontSize: 10, color: '#52B788', margin: 0 }}>Analyse a document or choose a plan.</p>
           </div>
           <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
             {[0,1,2].map((i) => (
@@ -80,46 +84,77 @@ function DashboardView({ visibleDocs }) {
           </div>
         </div>
 
-        {/* Search + filter */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-          <div style={{ flex: 1, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 9, padding: '5px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#9ca3af" strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"/></svg>
-            <span style={{ fontSize: 11, color: '#9ca3af' }}>Search documents...</span>
+        {/* Search + filter — one white card container */}
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: '10px 12px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+            <div style={{ flex: 1, background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="#9ca3af" strokeWidth="2"/><path d="M21 21l-4.35-4.35" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"/></svg>
+              <span style={{ fontSize: 10, color: '#9ca3af' }}>Search by document type or filename...</span>
+            </div>
+            <div style={{ background: '#1B4332', color: '#fff', borderRadius: 10, padding: '6px 12px', fontSize: 10, fontWeight: 600 }}>Search</div>
           </div>
-          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 9, padding: '5px 10px', fontSize: 10, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#9ca3af' }} />
-            All risks
+          {/* Risk filter pills */}
+          <div style={{ display: 'flex', gap: 5 }}>
+            {[
+              { label: 'All',    active: true,  dot: null,       activeBg: '#1B4332', activeText: '#fff' },
+              { label: 'High',   active: false, dot: '#ef4444'  },
+              { label: 'Medium', active: false, dot: '#f59e0b'  },
+              { label: 'Low',    active: false, dot: '#22c55e'  },
+            ].map(({ label, active, dot, activeBg, activeText }) => (
+              <div key={label} style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                padding: '3px 10px', borderRadius: 20, fontSize: 10, fontWeight: 500,
+                background: active ? '#1B4332' : '#fff',
+                color: active ? '#fff' : '#6b7280',
+                border: `1px solid ${active ? '#1B4332' : '#e5e7eb'}`,
+              }}>
+                {dot && <div style={{ width: 6, height: 6, borderRadius: '50%', background: dot }} />}
+                {label}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Month group */}
-        <p style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 7 }}>This month</p>
+        {/* Month group header with extending line */}
+        {visibleDocs.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, paddingLeft: 2 }}>
+            <p style={{ fontSize: 9, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0, whiteSpace: 'nowrap' }}>This month</p>
+            <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
+            <span style={{ fontSize: 9, color: '#d1d5db', flexShrink: 0 }}>{visibleDocs.length} doc{visibleDocs.length !== 1 ? 's' : ''}</span>
+          </div>
+        )}
 
-        {/* Doc cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {visibleDocs.map((doc, i) => (
-            <div key={i} style={{
-              background: '#fff', border: '1px solid #f0f0f0', borderRadius: 12,
-              display: 'flex', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              animation: 'previewSlideIn 0.3s ease',
-            }}>
-              <div style={{ width: 4, background: doc.strip, flexShrink: 0 }} />
-              <div style={{ padding: '10px 12px', flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* Cards — ALL inside ONE white container with divide-y rows */}
+        {visibleDocs.length > 0 && (
+          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden' }}>
+            {visibleDocs.map((doc, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px',
+                borderTop: i > 0 ? '1px solid #f3f4f6' : 'none',
+                animation: 'previewSlideIn 0.3s ease',
+              }}>
+                {/* Thin risk strip */}
+                <div style={{ width: 3, height: 36, borderRadius: 9999, background: doc.strip, flexShrink: 0 }} />
+                {/* Text */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name}</p>
-                  <p style={{ fontSize: 10, color: '#9ca3af', margin: '2px 0 0' }}>{doc.type} · {doc.date}</p>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.type}</p>
+                  <p style={{ fontSize: 10, color: '#9ca3af', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name}</p>
+                  <p style={{ fontSize: 9, color: '#d1d5db', margin: '2px 0 0' }}>{doc.date}</p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                {/* Risk badge + faint icons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: doc.riskBg, border: `1px solid ${doc.riskBorder}`, borderRadius: 20, padding: '3px 8px' }}>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: doc.riskColor }} />
                     <span style={{ fontSize: 9, fontWeight: 700, color: doc.riskText }}>{doc.risk}</span>
                   </div>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  {/* Rename + delete icons (faint, as they'd appear on hover) */}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.2 }}><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ opacity: 0.2 }}><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

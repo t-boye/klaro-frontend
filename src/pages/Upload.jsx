@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import Navbar from '../components/Navbar';
@@ -6,7 +6,14 @@ import Spinner from '../components/Spinner';
 import UpgradeModal from '../components/UpgradeModal';
 import { clearSession, getUser } from '../lib/auth';
 
-const MAX_FILE_BYTES = 50 * 1024 * 1024; // 50 MB
+const MAX_FILE_BYTES = 50 * 1024 * 1024;
+
+const ANALYSE_STEPS = [
+  { label: 'Reading document'        },
+  { label: 'Detecting document type' },
+  { label: 'Analysing clauses'       },
+  { label: 'Finalising results'      },
+];
 
 async function extractPdfText(file) {
   const pdfjsLib = await import('pdfjs-dist');
@@ -41,15 +48,23 @@ export default function Upload() {
   const user     = getUser();
   const canUseLocalLang = LOCAL_LANG_PLANS.includes(user?.plan);
 
-  const [mode, setMode]           = useState('upload'); // 'upload' | 'paste'
+  const [mode, setMode]           = useState('upload');
   const [text, setText]           = useState('');
   const [filename, setFilename]   = useState('');
   const [language, setLanguage]   = useState('en');
   const [loading, setLoading]     = useState(false);
   const [progress, setProgress]   = useState('');
+  const [analyseStep, setAnalyseStep] = useState(0);
   const [error, setError]         = useState('');
   const [dragging, setDragging]   = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
+
+  useEffect(() => {
+    if (!loading) { setAnalyseStep(0); return; }
+    const delays = [4000, 10000, 28000];
+    const timers = delays.map((d, i) => setTimeout(() => setAnalyseStep(i + 1), d));
+    return () => timers.forEach(clearTimeout);
+  }, [loading]);
 
   const processFile = useCallback(async (file) => {
     if (!file) return;
@@ -133,7 +148,6 @@ export default function Upload() {
     }
 
     setLoading(true);
-    setProgress('Analysing your document with Klaro...');
 
     try {
       const data = await api.analyze.create({ text, filename, language });
@@ -266,16 +280,47 @@ export default function Upload() {
             )}
           </div>
 
-          {progress && (
+          {progress && !loading && (
             <div className="flex items-center gap-3 text-sm text-brand-600">
               <Spinner className="w-4 h-4" /> {progress}
+            </div>
+          )}
+
+          {loading && (
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Analysing your document…</p>
+                <span className="text-xs text-gray-400 dark:text-gray-500">30–60 seconds</span>
+              </div>
+              <div className="space-y-3">
+                {ANALYSE_STEPS.map((s, i) => (
+                  <div key={i} className={`flex items-center gap-3 transition-opacity duration-500 ${i <= analyseStep ? 'opacity-100' : 'opacity-30'}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-colors ${
+                      i < analyseStep  ? 'bg-brand-600 text-white' :
+                      i === analyseStep ? 'bg-brand-50 dark:bg-brand-900/30 text-brand-600 ring-2 ring-brand-500 ring-offset-1' :
+                      'bg-gray-100 dark:bg-gray-700 text-gray-400'
+                    }`}>
+                      {i < analyseStep
+                        ? <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
+                        : i + 1
+                      }
+                    </div>
+                    <span className={`text-sm ${i === analyseStep ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
+                      {s.label}
+                      {i === analyseStep && (
+                        <span className="inline-block w-1 h-3.5 bg-brand-500 ml-1.5 align-middle rounded-full animate-pulse" />
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <button type="submit" className="btn-primary w-full text-base py-4" disabled={loading || !text.trim()}>
-            {loading ? 'Analysing...' : 'Analyse document'}
+            {loading ? 'Analysing…' : 'Analyse document'}
           </button>
         </form>
 

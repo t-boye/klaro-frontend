@@ -505,7 +505,7 @@ export default function Lawyers() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navbar onLogout={() => { clearSession(); navigate('/'); }} />
+      <Navbar onLogout={() => { clearSession(); navigate('/'); }} wide />
       {showApply && <ApplyModal onClose={() => setShowApply(false)} />}
 
       {/* Hero header */}
@@ -523,7 +523,7 @@ export default function Lawyers() {
               </div>
               <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-1">Find a Ghana Lawyer</h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm leading-relaxed">
-                Verified GBA members ready to help you act on your document analysis. All lawyers listed are qualified and registered.
+                Real GBA-listed lawyers across Ghana. Find someone to help you act on your document analysis.
               </p>
             </div>
             <button
@@ -657,8 +657,8 @@ export default function Lawyers() {
         </div>
 
         <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-5 px-4 leading-relaxed">
-          All lawyers listed are verified members of the Ghana Bar Association.
-          Klaro is not responsible for the services provided by listed lawyers.
+          Lawyers are sourced from public directories including the Ghana Bar Association Lawyer Locator.
+          Contact details appear once a lawyer verifies their profile. Klaro is not responsible for services provided by listed lawyers.
         </p>
       </main>
     </div>

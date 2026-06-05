@@ -12,11 +12,19 @@ async function request(path, options = {}) {
 
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
   const data = await res.json().catch(() => ({
-    error: res.status === 500 ? 'Server error — please try again' : `Server returned status ${res.status}`,
+    error: res.status >= 500
+      ? 'Service temporarily unavailable. Please try again in a moment.'
+      : res.status === 429
+      ? 'Too many requests. Please slow down and try again.'
+      : 'Something went wrong. Please try again.',
   }));
 
   if (!res.ok) {
-    const message = data.error || `Request failed (${res.status})`;
+    const message = data.error || (
+      res.status >= 500
+        ? 'Service temporarily unavailable. Please try again.'
+        : 'Something went wrong. Please try again.'
+    );
     throw Object.assign(new Error(message), { status: res.status, data });
   }
 

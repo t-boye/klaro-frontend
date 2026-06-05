@@ -22,7 +22,10 @@ export const adminApi = {
   auditLogs:     (params = {})        => request('/admin/audit?' + new URLSearchParams(params).toString()),
   updatePlan:    (userId, plan)       => request(`/admin/users/${userId}/plan`,        { method: 'PATCH', body: JSON.stringify({ plan }) }),
   resetUsage:    (userId)             => request(`/admin/users/${userId}/reset-usage`,  { method: 'POST' }),
+  blockUser:     (userId, blocked, reason = '') => request(`/admin/users/${userId}/block`, { method: 'PATCH', body: JSON.stringify({ blocked, reason }) }),
   getUserDetail: (userId)             => request(`/admin/users/${userId}/analyses`),
+  exportUsers:   (params = {})        => request('/admin/users/export?' + new URLSearchParams(params).toString()),
+  exportAudit:   (params = {})        => request('/admin/audit/export?' + new URLSearchParams(params).toString()),
   // Lawyers
   getLawyers:    ()                   => request('/admin/lawyers'),
   createLawyer:  (data)               => request('/admin/lawyers', { method: 'POST', body: JSON.stringify(data) }),
@@ -32,4 +35,8 @@ export const adminApi = {
   getLawyerApplications: (status = 'pending') => request(`/admin/lawyer-applications?status=${status}`),
   reviewLawyerApplication: (id, action, admin_notes) =>
     request(`/admin/lawyer-applications/${id}`, { method: 'PATCH', body: JSON.stringify({ action, admin_notes }) }),
+  // Security — IP blocking
+  getBlockedIPs:  ()           => request('/admin/blocked-ips'),
+  addBlockedIP:   (ip, reason) => request('/admin/blocked-ips', { method: 'POST', body: JSON.stringify({ ip, reason }) }),
+  removeBlockedIP:(ip)         => request(`/admin/blocked-ips/${encodeURIComponent(ip)}`, { method: 'DELETE' }),
 };

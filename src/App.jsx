@@ -33,7 +33,7 @@ function OnboardingRoute({ children }) {
 }
 
 function AdminRoute({ children }) {
-  return isAdminLoggedIn() ? children : <Navigate to="/admin" replace />;
+  return isAdminLoggedIn() ? children : <Navigate to="/admin/login" replace />;
 }
 
 export default function App() {
@@ -64,7 +64,8 @@ export default function App() {
             <Route path="/payment/callback" element={<PrivateRoute><Payment /></PrivateRoute>} />
             <Route path="/profile"          element={<PrivateRoute><Profile /></PrivateRoute>} />
             <Route path="/lawyers"          element={<PrivateRoute><Lawyers /></PrivateRoute>} />
-            <Route path="/admin"            element={<AdminLogin />} />
+            <Route path="/admin"            element={<Navigate to="/admin/login" replace />} />
+            <Route path="/admin/login"      element={<AdminLogin />} />
             <Route path="/admin/dashboard"  element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="*"                 element={<NotFound />} />
           </Routes>
