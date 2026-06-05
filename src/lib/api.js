@@ -11,7 +11,9 @@ async function request(path, options = {}) {
   };
 
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
-  const data = await res.json().catch(() => ({ error: 'Invalid server response' }));
+  const data = await res.json().catch(() => ({
+    error: res.status === 500 ? 'Server error — please try again' : `Server returned status ${res.status}`,
+  }));
 
   if (!res.ok) {
     const message = data.error || `Request failed (${res.status})`;
@@ -46,6 +48,8 @@ export const api = {
     },
     remove:  (id) =>
       request(`/analyze/${id}`,        { method: 'DELETE' }),
+    rename:  (id, name) =>
+      request(`/analyze/${id}`,        { method: 'PATCH', body: JSON.stringify({ name }) }),
     share:   (id) =>
       request(`/analyze/${id}/share`,  { method: 'POST' }),
   },
@@ -65,12 +69,16 @@ export const api = {
   license: () => request('/license'),
 
   profile: {
-    update: (data) =>
-      request('/profile', { method: 'PATCH', body: JSON.stringify(data) }),
+    update: (data) => request('/profile', { method: 'PATCH', body: JSON.stringify(data) }),
+    get:    ()     => request('/license'),
   },
 
   lawyers: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/lawyers${qs ? '?' + qs : ''}`);
+  },
+
+  lawyerApplication: {
+    submit: (data) => request('/lawyer-applications', { method: 'POST', body: JSON.stringify(data) }),
   },
 };

@@ -12,7 +12,9 @@ export default function ClauseCard({ clause, lang }) {
   const [open, setOpen] = useState(clause.rating === 'RED' || clause.rating === 'YELLOW');
   const cfg = RATING_CONFIG[clause.rating] || RATING_CONFIG.GREY;
 
-  const explanation = lang === 'tw' && clause.twi ? clause.twi : clause.plainEnglish;
+  // localLanguage covers all 7 Ghanaian languages; twi is legacy field for backward compat
+  const localText = clause.localLanguage || clause.twi;
+  const explanation = (lang && lang !== 'en' && localText) ? localText : clause.plainEnglish;
 
   return (
     <div className={`rounded-xl border ${cfg.border} overflow-hidden`}>

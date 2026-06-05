@@ -1,80 +1,179 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
 
     <!-- ── Primary SEO ── -->
-    <title>Klaro – Know Before You Sign | AI Legal Document Explainer for Ghana</title>
-    <meta name="description" content="Klaro reads your employment contracts, land agreements, loan forms and tenancy agreements — and explains every clause in plain language. Built for Ghanaians, powered by Claude AI. Try 3 documents free." />
-    <meta name="keywords" content="legal document explainer Ghana, understand contract Ghana, employment contract Ghana, land agreement Ghana, tenancy agreement Ghana, Ghana labour act, AI lawyer Ghana, legal AI Africa, Klaro" />
+    <title>
+      Klaro – Ghana's #1 AI Legal Document Explainer | Know Before You Sign
+    </title>
+    <meta
+      name="description"
+      content="Klaro is Ghana's #1 and West Africa's leading AI legal document explainer. Upload your employment contract, land agreement, loan form or tenancy agreement and get a clear, plain-language breakdown — clause by clause. Trusted across Ghana and West Africa. Try 3 documents free."
+    />
+    <meta
+      name="keywords"
+      content="number one legal AI Ghana, best legal document explainer Ghana, legal document explainer Ghana, understand contract Ghana, employment contract Ghana, land agreement Ghana, tenancy agreement Ghana, loan agreement Ghana, Ghana labour act, AI lawyer Ghana, legal AI West Africa, legal AI Africa, contract review Ghana, document analysis Ghana, Klaro, legal help Ghana, contract explainer Nigeria, legal document explainer West Africa, ECOWAS legal AI, affordable lawyer Ghana, understand legal documents Ghana"
+    />
     <meta name="author" content="Klaro Technologies" />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://klaro.app/" />
+    <meta name="geo.region" content="GH" />
+    <meta name="geo.placename" content="Ghana, West Africa" />
+    <link rel="canonical" href="https://klarogh.app/" />
 
     <!-- ── Open Graph (Facebook, WhatsApp, LinkedIn) ── -->
-    <meta property="og:type"        content="website" />
-    <meta property="og:url"         content="https://klaro.app/" />
-    <meta property="og:title"       content="Klaro – Know Before You Sign" />
-    <meta property="og:description" content="Before you sign that contract, let Klaro read it first. AI-powered clause-by-clause analysis built for Ghanaians — in plain language, in your language." />
-    <meta property="og:image"       content="/assets/og-image/og-image.png" />
-    <meta property="og:image:width"  content="1200" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://klaro.app/" />
+    <meta
+      property="og:title"
+      content="Klaro – Ghana's #1 AI Legal Document Explainer"
+    />
+    <meta
+      property="og:description"
+      content="Ghana's #1 and West Africa's leading AI legal tool. Before you sign that contract, let Klaro read it first — clause-by-clause analysis in plain language, in your language. Trusted across West Africa."
+    />
+    <meta property="og:image" content="/assets/og-image/og-image.png" />
+    <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt"   content="Klaro – AI legal document explainer for Ghana" />
-    <meta property="og:site_name"   content="Klaro" />
-    <meta property="og:locale"      content="en_GH" />
+    <meta
+      property="og:image:alt"
+      content="Klaro – Ghana's #1 AI legal document explainer for West Africa"
+    />
+    <meta property="og:site_name" content="Klaro" />
+    <meta property="og:locale" content="en_GH" />
 
     <!-- ── Twitter / X Card ── -->
-    <meta name="twitter:card"        content="summary_large_image" />
-    <meta name="twitter:title"       content="Klaro – Know Before You Sign" />
-    <meta name="twitter:description" content="Before you sign that contract, let Klaro read it first. AI clause analysis for Ghanaians — plain language, Ghana law context, 7 languages." />
-    <meta name="twitter:image"       content="/assets/og-image/og-image.png" />
-    <meta name="twitter:image:alt"   content="Klaro – AI legal document explainer for Ghana" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Klaro – Ghana's #1 AI Legal Document Explainer"
+    />
+    <meta
+      name="twitter:description"
+      content="Ghana's #1 AI legal tool — trusted across West Africa. Upload your contract, get a plain-language breakdown in seconds. 7 Ghanaian languages supported."
+    />
+    <meta name="twitter:image" content="/assets/og-image/og-image.png" />
+    <meta
+      name="twitter:image:alt"
+      content="Klaro – Ghana's #1 AI legal document explainer"
+    />
 
     <!-- ── PWA / Mobile ── -->
-    <meta name="theme-color"                    content="#1B4332" />
-    <meta name="mobile-web-app-capable"         content="yes" />
-    <meta name="apple-mobile-web-app-capable"   content="yes" />
+    <meta name="theme-color" content="#1B4332" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title"     content="Klaro" />
+    <meta name="apple-mobile-web-app-title" content="Klaro" />
 
     <!-- ── Icons ── -->
-    <link rel="icon"             type="image/png" href="/assets/logos/logo.png" />
-    <link rel="apple-touch-icon"                  href="/assets/logos/logo.png" />
+    <link rel="icon" type="image/png" href="/assets/logos/logo.png" />
+    <link rel="apple-touch-icon" href="/assets/logos/logo.png" />
 
     <!-- ── PWA manifest ── -->
     <link rel="manifest" href="/manifest.json" />
 
-    <!-- ── Structured data (JSON-LD) ── -->
-    <script type="application/ld+json">{
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Klaro",
-      "url": "https://klaro.app",
-      "description": "AI-powered legal document explainer built for Ghanaians. Understand employment contracts, land agreements, loan forms and more — in plain language.",
-      "applicationCategory": "LegalService",
-      "operatingSystem": "Web",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "GHS",
-        "description": "3 free document analyses. No credit card required."
-      },
-      "creator": {
-        "@type": "Organization",
-        "name": "Klaro Technologies",
-        "url": "https://klaro.app"
-      },
-      "areaServed": {
-        "@type": "Country",
-        "name": "Ghana"
+    <!-- ── Structured data: WebApplication ── -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Klaro",
+        "alternateName": "Klaro Legal AI",
+        "url": "https://klaro.app",
+        "description": "Ghana's #1 AI-powered legal document explainer and West Africa's leading legal AI platform. Understand employment contracts, land agreements, loan forms, tenancy agreements and court documents — clause by clause, in plain language, in 7 Ghanaian languages.",
+        "applicationCategory": "LegalService",
+        "operatingSystem": "Web",
+        "inLanguage": ["en", "ak", "ee", "dag", "ha", "gaa", "fan"],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "GHS",
+          "description": "3 free document analyses. No credit card required."
+        },
+        "creator": {
+          "@type": "Organization",
+          "name": "Klaro Technologies",
+          "url": "https://klaro.app",
+          "areaServed": [
+            { "@type": "Country", "name": "Ghana" },
+            { "@type": "Country", "name": "Nigeria" },
+            { "@type": "Country", "name": "Senegal" },
+            { "@type": "Country", "name": "Côte d'Ivoire" },
+            { "@type": "Country", "name": "Sierra Leone" },
+            { "@type": "Country", "name": "Liberia" },
+            { "@type": "Country", "name": "The Gambia" }
+          ],
+          "knowsAbout": [
+            "Ghana Law",
+            "Employment Law",
+            "Land Law",
+            "Tenancy Law",
+            "Loan Agreements",
+            "West Africa Legal Systems"
+          ]
+        },
+        "areaServed": [
+          { "@type": "Country", "name": "Ghana" },
+          { "@type": "AdministrativeArea", "name": "West Africa" }
+        ]
       }
-    }</script>
+    </script>
+
+    <!-- ── Structured data: FAQ ── -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is Klaro?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Klaro is Ghana's #1 AI-powered legal document explainer. It reads your contracts, land agreements, loan forms and tenancy agreements and explains every clause in plain, simple language — so you know exactly what you are signing."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is Klaro available in local Ghanaian languages?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Klaro supports 7 languages including English, Twi, Ga, Ewe, Dagbani, Hausa and Fante — making it the most accessible legal AI tool in Ghana and West Africa."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How much does Klaro cost?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Klaro offers 3 free document analyses with no credit card required. Paid plans start with pay-per-document options and monthly subscriptions priced in Ghana Cedis (GHS)."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is Klaro safe for sensitive legal documents?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Klaro uses secure, encrypted document processing. Your documents are analyzed privately and are not used to train any AI model."
+            }
+          }
+        ]
+      }
+    </script>
 
     <!-- ── Prevent white flash before React hydrates ── -->
     <style>
-      body { margin: 0; background: #070f0a; }
-      #root { background: #ffffff; }
+      body {
+        margin: 0;
+        background: #070f0a;
+      }
+      #root {
+        background: #ffffff;
+      }
     </style>
   </head>
   <body class="bg-white text-gray-900 antialiased">

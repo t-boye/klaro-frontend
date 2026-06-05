@@ -4,7 +4,9 @@ import { api } from '../lib/api';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import UpgradeModal from '../components/UpgradeModal';
-import { clearSession } from '../lib/auth';
+import { clearSession, getUser } from '../lib/auth';
+
+const MAX_FILE_BYTES = 50 * 1024 * 1024; // 50 MB
 
 async function extractPdfText(file) {
   const pdfjsLib = await import('pdfjs-dist');
@@ -24,9 +26,20 @@ async function extractPdfText(file) {
   return text;
 }
 
+async function extractDocxText(file) {
+  const mammoth = await import('mammoth');
+  const buffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+  return result.value;
+}
+
+const LOCAL_LANG_PLANS = ['individual', 'professional', 'business'];
+
 export default function Upload() {
   const navigate = useNavigate();
   const fileRef  = useRef();
+  const user     = getUser();
+  const canUseLocalLang = LOCAL_LANG_PLANS.includes(user?.plan);
 
   const [mode, setMode]           = useState('upload'); // 'upload' | 'paste'
   const [text, setText]           = useState('');
@@ -42,21 +55,53 @@ export default function Upload() {
     if (!file) return;
     setError('');
     setFilename(file.name);
+
+    if (file.size > MAX_FILE_BYTES) {
+      setError('File is too large. Maximum size is 50 MB.');
+      return;
+    }
+
+    const isDocx = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      || file.name.toLowerCase().endsWith('.docx');
+    const isDoc = file.type === 'application/msword' || file.name.toLowerCase().endsWith('.doc');
+
     if (file.type === 'application/pdf') {
       setProgress('Extracting text from PDF...');
       try {
         const extracted = await extractPdfText(file);
+        if (!extracted.trim()) {
+          setError('This PDF appears to be image-only (scanned). Please copy and paste the text instead.');
+          setProgress('');
+          return;
+        }
         setText(extracted);
         setProgress('');
       } catch {
-        setError('Could not extract text from this PDF. Try pasting the text instead.');
+        setError('Could not read this PDF. It may be password-protected or corrupted. Try pasting the text instead.');
         setProgress('');
       }
+    } else if (isDocx) {
+      setProgress('Extracting text from Word document...');
+      try {
+        const extracted = await extractDocxText(file);
+        if (!extracted.trim()) {
+          setError('This Word document appears to be empty or image-only. Please copy and paste the text instead.');
+          setProgress('');
+          return;
+        }
+        setText(extracted);
+        setProgress('');
+      } catch {
+        setError('Could not read this Word document. Try saving as PDF or pasting the text instead.');
+        setProgress('');
+      }
+    } else if (isDoc) {
+      setError('Older .doc files are not supported. Please save as .docx or PDF and try again.');
     } else if (file.type.startsWith('text/')) {
       const t = await file.text();
       setText(t);
     } else {
-      setError('Please upload a PDF or text file.');
+      setError('Please upload a PDF, Word document (.docx), or plain text file.');
     }
   }, []);
 
@@ -83,8 +128,8 @@ export default function Upload() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
-    if (!text.trim() || text.trim().length < 50) {
-      return setError('Please upload a document or paste document text (at least 50 characters).');
+    if (!text.trim() || text.trim().length < 30) {
+      return setError('The document text is too short. Please upload a PDF or paste at least a few sentences of contract text.');
     }
 
     setLoading(true);
@@ -117,7 +162,7 @@ export default function Upload() {
         <div className="mb-6">
           <Link to="/dashboard" className="text-sm text-brand-600 dark:text-brand-400 hover:underline">&larr; Dashboard</Link>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">Analyse a document</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Upload a PDF or paste your document text below.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Upload a PDF, Word document, or paste your text below.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -128,7 +173,7 @@ export default function Upload() {
               onClick={() => setMode('upload')}
               className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-colors ${mode === 'upload' ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-gray-700 border-gray-200'}`}
             >
-              Upload PDF
+              Upload file
             </button>
             <button
               type="button"
@@ -150,16 +195,16 @@ export default function Upload() {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <input ref={fileRef} type="file" accept=".pdf,.txt" className="hidden" onChange={handleFile} />
+              <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={handleFile} />
               <p className="text-4xl mb-3">{dragging ? '📥' : '📂'}</p>
               {filename ? (
                 <p className="font-medium text-gray-900">{filename}</p>
               ) : (
                 <>
                   <p className="text-sm font-medium text-gray-700">
-                    {dragging ? 'Drop it here' : 'Tap to choose or drag a PDF/text file'}
+                    {dragging ? 'Drop it here' : 'Tap to choose or drag a file here'}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">PDF or TXT · Max 50MB</p>
+                  <p className="text-xs text-gray-400 mt-1">PDF, Word (.docx) or TXT · Max 50MB</p>
                 </>
               )}
               {text && <p className="text-xs text-green-600 mt-2">Text extracted successfully ({text.length.toLocaleString()} chars)</p>}
@@ -186,30 +231,38 @@ export default function Upload() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Explanation language</label>
             <div className="flex flex-wrap gap-2">
               {[
-                { v: 'en',  l: 'English' },
-                { v: 'tw',  l: 'Twi' },
-                { v: 'ga',  l: 'Ga' },
-                { v: 'ewe', l: 'Ewe' },
-                { v: 'dag', l: 'Dagbani' },
-                { v: 'ha',  l: 'Hausa' },
-                { v: 'fan', l: 'Fante' },
-              ].map(({ v, l }) => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setLanguage(v)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                    language === v
-                      ? 'bg-brand-600 text-white border-brand-600'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-brand-300'
-                  }`}
-                >
-                  {l}
-                </button>
-              ))}
+                { v: 'en',  l: 'English', local: false },
+                { v: 'tw',  l: 'Twi',     local: true },
+                { v: 'ga',  l: 'Ga',      local: true },
+                { v: 'ewe', l: 'Ewe',     local: true },
+                { v: 'dag', l: 'Dagbani', local: true },
+                { v: 'ha',  l: 'Hausa',   local: true },
+                { v: 'fan', l: 'Fante',   local: true },
+              ].map(({ v, l, local }) => {
+                const locked = local && !canUseLocalLang;
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => { if (!locked) setLanguage(v); else setShowUpgrade(true); }}
+                    title={locked ? 'Requires Individual plan or above' : undefined}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 ${
+                      language === v
+                        ? 'bg-brand-600 text-white border-brand-600'
+                        : locked
+                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-pointer'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-brand-300'
+                    }`}
+                  >
+                    {l}{locked && <span className="text-xs">🔒</span>}
+                  </button>
+                );
+              })}
             </div>
-            {language !== 'en' && (
-              <p className="text-xs text-amber-600 mt-1">Local language explanations available on Individual plan and above.</p>
+            {!canUseLocalLang && (
+              <p className="text-xs text-amber-600 mt-1">
+                Local language explanations require an <button type="button" onClick={() => setShowUpgrade(true)} className="underline font-medium">Individual plan or above</button>.
+              </p>
             )}
           </div>
 

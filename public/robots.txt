@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /upload
+Disallow: /analysis/
+Disallow: /profile
+Disallow: /payment
+Disallow: /onboarding
+Disallow: /admin
+
+Sitemap: https://klarogh.com/sitemap.xml

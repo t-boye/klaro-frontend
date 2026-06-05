@@ -6,6 +6,7 @@
   html {
     -webkit-tap-highlight-color: transparent;
     background-color: #F8FAF7;
+    font-size: 90%;
   }
   body {
     color: #1A1A1A;

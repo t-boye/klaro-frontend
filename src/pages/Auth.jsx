@@ -221,7 +221,7 @@ export default function Auth() {
           <Link to="/terms" className="underline hover:text-gray-600 dark:hover:text-gray-300">Terms</Link>
           {' '}and{' '}
           <Link to="/privacy" className="underline hover:text-gray-600 dark:hover:text-gray-300">Privacy Policy</Link>.
-          Klaro explains documents — it does not give legal advice.
+          Klaro explains documents. It does not give legal advice.
         </p>
       </div>
     </div>

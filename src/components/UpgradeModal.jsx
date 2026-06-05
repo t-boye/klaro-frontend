@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { api } from '../lib/api';
 
 const PLANS = [
-  { key: 'basic',        label: 'Pay Per Doc – Basic',    price: 'GHS 10',  desc: 'Full English analysis, colour coding, 30-day history' },
-  { key: 'full',         label: 'Pay Per Doc – Full',     price: 'GHS 20',  desc: 'Full analysis + Ghana context + suggested questions' },
-  { key: 'twi',         label: 'Pay Per Doc – Twi',      price: 'GHS 35',  desc: 'Full analysis in English AND Twi' },
-  { key: 'individual',   label: 'Individual Monthly',     price: 'GHS 50/mo',  desc: '5 documents/month, all features, Ask Klaro chat' },
-  { key: 'professional', label: 'Professional Monthly',   price: 'GHS 150/mo', desc: 'Unlimited documents, PDF export, priority support' },
+  { key: 'basic',        label: 'Pay Per Doc – Basic',        price: 'GHS 25',     desc: 'Full English analysis, colour-coded risk, 30-day history' },
+  { key: 'full',         label: 'Pay Per Doc – Full',         price: 'GHS 40',     desc: 'Full analysis + Ghana law context + suggested questions' },
+  { key: 'twi',          label: 'Pay Per Doc – Multilingual', price: 'GHS 55',     desc: 'Full analysis in English + any of 7 Ghanaian languages' },
+  { key: 'individual',   label: 'Individual Monthly',         price: 'GHS 89/mo',  desc: '5 documents/month, all languages, Ask Klaro chat' },
+  { key: 'professional', label: 'Professional Monthly',       price: 'GHS 199/mo', desc: 'Unlimited documents, PDF export, priority support' },
+  { key: 'business',     label: 'Business Monthly',           price: 'GHS 399/mo', desc: '5 seats, unlimited documents, dedicated support' },
 ];
 
 export default function UpgradeModal({ onClose }) {

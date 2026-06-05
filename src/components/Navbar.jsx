@@ -2,21 +2,15 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getUser } from '../lib/auth';
 import ThemeToggle from './ThemeToggle';
+import AvatarIcon from './AvatarIcon';
 
-function Avatar() {
-  return (
-    <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden" style={{ background: '#1B4332' }}>
-      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
-        {/* Body / shoulders */}
-        <ellipse cx="16" cy="29" rx="11" ry="7" fill="#52B788" opacity="0.85" />
-        {/* Head */}
-        <circle cx="16" cy="13" r="6.5" fill="#52B788" />
-        {/* Face highlight */}
-        <circle cx="14" cy="11.5" r="1.8" fill="rgba(255,255,255,0.2)" />
-      </svg>
-    </div>
-  );
-}
+const PLAN_BADGE = {
+  trial:        { label: 'Trial', bg: '#6B7280', text: '#fff' },
+  pay_per_doc:  { label: 'PPD',   bg: '#2563EB', text: '#fff' },
+  individual:   { label: 'Solo',  bg: '#0891B2', text: '#fff' },
+  professional: { label: 'Pro',   bg: '#1B4332', text: '#52B788' },
+  business:     { label: 'Biz',   bg: '#6D28D9', text: '#fff' },
+};
 
 function NavItem({ to, children, onClick }) {
   const location = useLocation();
@@ -41,8 +35,12 @@ function NavItem({ to, children, onClick }) {
 }
 
 export default function Navbar({ onLogout }) {
-  const user = getUser();
+  const user      = getUser();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const plan      = user?.plan || 'trial';
+  const badge     = PLAN_BADGE[plan] || PLAN_BADGE.trial;
+  const avatarId  = user?.avatar || 'male1';
 
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-10 backdrop-blur-sm">
@@ -71,7 +69,17 @@ export default function Navbar({ onLogout }) {
               onClick={() => setMenuOpen((o) => !o)}
               className="flex items-center gap-2 pl-1 pr-2 py-1.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
-              <Avatar />
+              {/* Avatar with plan indicator dot */}
+              <div className="relative flex-shrink-0">
+                <div className="w-8 h-8 rounded-full overflow-hidden">
+                  <AvatarIcon avatarId={avatarId} size={32} />
+                </div>
+                {/* Small colored dot — plan indicator */}
+                <span
+                  className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full"
+                  style={{ background: badge.bg, border: '2px solid #fff' }}
+                />
+              </div>
               <svg className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
               </svg>
@@ -84,12 +92,26 @@ export default function Navbar({ onLogout }) {
 
                   {/* User info */}
                   <div className="px-4 py-3 border-b border-gray-50 dark:border-gray-700">
-                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
-                      {user?.full_name || 'My account'}
-                    </p>
-                    <p className="text-gray-400 dark:text-gray-500 text-xs truncate mt-0.5">
-                      {user?.email || user?.phone}
-                    </p>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                        <AvatarIcon avatarId={avatarId} size={40} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+                          {user?.full_name || 'My account'}
+                        </p>
+                        <p className="text-gray-400 dark:text-gray-500 text-xs truncate mt-0.5">
+                          {user?.email || user?.phone}
+                        </p>
+                      </div>
+                    </div>
+                    {/* Plan pill */}
+                    <span
+                      className="inline-flex items-center text-xs font-bold px-2.5 py-0.5 rounded-full"
+                      style={{ background: badge.bg, color: badge.text }}
+                    >
+                      {badge.label} plan
+                    </span>
                   </div>
 
                   <div className="py-1">

@@ -89,7 +89,7 @@ export default function SharedAnalysis() {
 
         <div className="mt-10 bg-brand-50 border border-brand-200 rounded-2xl p-6 text-center">
           <p className="font-semibold text-brand-800 mb-1">Have a document you need explained?</p>
-          <p className="text-sm text-brand-700 mb-4">Get 3 free analyses — no credit card needed.</p>
+          <p className="text-sm text-brand-700 mb-4">Get 3 free analyses. No credit card needed.</p>
           <Link to="/auth" className="btn-primary">Start for free</Link>
         </div>
 

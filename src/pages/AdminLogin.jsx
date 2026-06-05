@@ -33,7 +33,7 @@ export default function AdminLogin() {
           <div className="inline-flex w-20 h-20 bg-white rounded-2xl items-center justify-center mb-4 shadow-xl overflow-hidden">
             <img src="/assets/logos/logo.png" alt="Klaro" className="w-full h-full object-contain p-2" />
           </div>
-          <p className="text-gray-400 text-sm mt-1">Admin panel — restricted access</p>
+          <p className="text-gray-400 text-sm mt-1">Admin panel, restricted access</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-gray-800 rounded-2xl p-6 space-y-4 border border-gray-700">
@@ -43,7 +43,7 @@ export default function AdminLogin() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@klaro.app"
+              placeholder="admin@klarogh.com"
               className="w-full bg-gray-700 border border-gray-600 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-gray-500"
               required
               autoComplete="email"

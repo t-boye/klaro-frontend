@@ -3,7 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
-import { clearSession } from '../lib/auth';
+import { clearSession, getUser, getToken, setSession } from '../lib/auth';
 
 export default function Payment() {
   const navigate = useNavigate();
@@ -20,20 +20,44 @@ export default function Payment() {
       return;
     }
 
-    api.payment.verify(reference)
-      .then((data) => {
-        if (data.status === 'success') {
-          setStatus('success');
-          setMessage('Payment confirmed! Your plan has been activated.');
-        } else {
-          setStatus('failed');
-          setMessage('Payment was not successful. Please try again.');
-        }
-      })
-      .catch((err) => {
-        setStatus('failed');
-        setMessage(err.message || 'Could not verify payment.');
-      });
+    // Retry up to 4 times with 2s delay — Paystack webhook may not have processed yet
+    let attempts = 0;
+    const MAX_ATTEMPTS = 4;
+    const DELAY_MS = 2000;
+
+    function attempt() {
+      attempts++;
+      api.payment.verify(reference)
+        .then((data) => {
+          if (data.status === 'success') {
+            // Sync the new plan into localStorage so Navbar badge updates immediately
+            api.license().then((licenseData) => {
+              const currentUser = getUser();
+              if (currentUser && licenseData.plan) {
+                setSession(getToken(), { ...currentUser, plan: licenseData.plan });
+              }
+            }).catch(() => {});
+            setStatus('success');
+            setMessage('Payment confirmed! Your plan has been activated.');
+          } else if (attempts < MAX_ATTEMPTS) {
+            setTimeout(attempt, DELAY_MS);
+          } else {
+            setStatus('failed');
+            setMessage('Payment could not be confirmed yet. If you were charged, please contact support and your plan will be activated shortly.');
+          }
+        })
+        .catch((err) => {
+          if (attempts < MAX_ATTEMPTS) {
+            setTimeout(attempt, DELAY_MS);
+          } else {
+            setStatus('failed');
+            setMessage(err.message || 'Could not verify payment.');
+          }
+        });
+    }
+
+    // Small initial delay so webhook has time to process first
+    setTimeout(attempt, 1500);
   }, [reference]);
 
   return (

@@ -73,33 +73,70 @@ function Pagination({ page, total, limit, onChange }) {
 
 // ─── tabs ─────────────────────────────────────────────────────────────────────
 
-function OverviewTab({ stats }) {
+const RISK_BAR_COLORS = { HIGH: 'bg-red-500', MEDIUM: 'bg-yellow-400', LOW: 'bg-green-500' };
+const LANG_LABELS = { en: 'English', tw: 'Twi', ga: 'Ga', ewe: 'Ewe', dag: 'Dagbani', ha: 'Hausa', fan: 'Fante' };
+
+function BarRow({ label, count, max, color = 'bg-brand-500' }) {
+  const pct = max > 0 ? Math.max(4, Math.round((count / max) * 100)) : 4;
+  return (
+    <div className="flex items-center gap-3 text-sm">
+      <span className="text-gray-600 w-36 truncate flex-shrink-0">{label}</span>
+      <div className="flex-1 bg-gray-100 rounded-full h-2">
+        <div className={`${color} h-2 rounded-full transition-all`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-gray-500 font-medium w-8 text-right flex-shrink-0">{count}</span>
+    </div>
+  );
+}
+
+function OverviewTab({ stats, onTabChange }) {
   if (!stats) return <div className="flex justify-center py-16"><Spinner className="w-8 h-8 text-brand-600" /></div>;
 
+  const avgSec = stats.analyses.avgProcessingMs > 0 ? (stats.analyses.avgProcessingMs / 1000).toFixed(1) : '—';
+  const maxDoc = Math.max(...(stats.topDocumentTypes.map(d => d.count)), 1);
+  const maxLang = Math.max(...(stats.languageDistribution?.map(l => l.count) || [1]), 1);
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* Pending applications alert */}
+      {stats.pendingApplications > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📋</span>
+            <div>
+              <p className="font-semibold text-amber-800">{stats.pendingApplications} pending lawyer application{stats.pendingApplications !== 1 ? 's' : ''}</p>
+              <p className="text-xs text-amber-600">Lawyers waiting for review and approval</p>
+            </div>
+          </div>
+          <button onClick={() => onTabChange('Applications')} className="px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors flex-shrink-0">
+            Review →
+          </button>
+        </div>
+      )}
+
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Total users"    value={fmt(stats.users.total)}    sub={`+${fmt(stats.users.last30d)} last 30d`} />
-        <StatCard label="Total analyses" value={fmt(stats.analyses.total)} sub={`+${fmt(stats.analyses.last30d)} last 30d`} />
-        <StatCard label="Total revenue"  value={fmtGhs(stats.revenue.totalGhs)} sub={`${fmtGhs(stats.revenue.last30dGhs)} last 30d`} color="bg-emerald-50" />
-        <StatCard label="API tokens used" value={fmt(stats.analyses.totalTokens)} sub="lifetime" />
+        <StatCard label="Total users"     value={fmt(stats.users.total)}           sub={`+${fmt(stats.users.last30d)} last 30d`} />
+        <StatCard label="Total analyses"  value={fmt(stats.analyses.total)}         sub={`+${fmt(stats.analyses.last30d)} last 30d`} />
+        <StatCard label="Total revenue"   value={fmtGhs(stats.revenue.totalGhs)}   sub={`${fmtGhs(stats.revenue.last30dGhs)} last 30d`} color="bg-emerald-50" />
+        <StatCard label="Avg. analysis"   value={`${avgSec}s`}                      sub={`${fmt(stats.analyses.totalTokens)} tokens total`} />
       </div>
 
-      {/* Daily activity */}
+      {/* Daily activity bar chart */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <h3 className="font-semibold text-gray-800 mb-4">Daily analyses — last 14 days</h3>
+        <h3 className="font-semibold text-gray-800 mb-4">Daily analyses, last 14 days</h3>
         {stats.dailyActivity.length === 0 ? (
           <p className="text-sm text-gray-400">No data yet.</p>
         ) : (
-          <div className="flex items-end gap-1.5 h-24">
+          <div className="flex items-end gap-1.5 h-28">
             {stats.dailyActivity.map((d) => {
               const max = Math.max(...stats.dailyActivity.map((x) => x.count), 1);
               const pct = Math.round((d.count / max) * 100);
               return (
-                <div key={d.day} className="flex-1 flex flex-col items-center gap-1" title={`${d.day}: ${d.count}`}>
-                  <div className="w-full bg-brand-500 rounded-t" style={{ height: `${pct}%`, minHeight: 2 }} />
-                  <span className="text-xs text-gray-400 rotate-45 origin-left hidden sm:block" style={{ fontSize: 9 }}>
+                <div key={d.day} className="flex-1 flex flex-col items-center gap-1 group" title={`${d.day}: ${d.count} analyses`}>
+                  <span className="text-xs text-gray-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">{d.count}</span>
+                  <div className="w-full bg-brand-500 rounded-t hover:bg-brand-400 transition-colors" style={{ height: `${Math.max(pct, 3)}%` }} />
+                  <span className="text-gray-400 hidden sm:block" style={{ fontSize: 9 }}>
                     {new Date(d.day).toLocaleDateString('en-GH', { day: 'numeric', month: 'short' })}
                   </span>
                 </div>
@@ -109,32 +146,78 @@ function OverviewTab({ stats }) {
         )}
       </div>
 
-      {/* Two-column lower section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* 3-col grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Plan distribution */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-          <h3 className="font-semibold text-gray-800 mb-4">Plan distribution</h3>
+          <h3 className="font-semibold text-gray-800 mb-4 text-sm">Plan distribution</h3>
           <div className="space-y-2">
             {stats.planDistribution.map((p) => (
               <div key={p.plan} className="flex items-center justify-between text-sm">
                 <PlanBadge plan={p.plan} />
-                <span className="font-medium text-gray-700">{fmt(p.count)}</span>
+                <span className="font-medium text-gray-600">{fmt(p.count)}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Top document types */}
+        {/* Risk breakdown */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-          <h3 className="font-semibold text-gray-800 mb-4">Top document types</h3>
-          <div className="space-y-2">
-            {stats.topDocumentTypes.map((d) => (
-              <div key={d.document_type} className="flex items-center justify-between text-sm">
-                <span className="text-gray-700 truncate max-w-[180px]">{d.document_type || 'Unknown'}</span>
-                <span className="font-medium text-gray-500 ml-2">{fmt(d.count)}</span>
+          <h3 className="font-semibold text-gray-800 mb-4 text-sm">Risk distribution</h3>
+          <div className="space-y-3">
+            {stats.riskDistribution.map((r) => (
+              <div key={r.overall_risk} className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${RISK_COLORS[r.overall_risk] || 'bg-gray-100 text-gray-600'}`}>{r.overall_risk || 'N/A'}</span>
+                <div className="flex-1 bg-gray-100 rounded-full h-1.5">
+                  <div className={`h-1.5 rounded-full ${RISK_BAR_COLORS[r.overall_risk] || 'bg-gray-400'}`}
+                    style={{ width: `${Math.max(6, (r.count / Math.max(...stats.riskDistribution.map(x => x.count), 1)) * 100)}%` }} />
+                </div>
+                <span className="text-xs text-gray-500 font-medium w-6 text-right">{r.count}</span>
               </div>
             ))}
+            {stats.riskDistribution.length === 0 && <p className="text-sm text-gray-400">No data yet.</p>}
+          </div>
+        </div>
+
+        {/* Language usage */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+          <h3 className="font-semibold text-gray-800 mb-4 text-sm">Language usage</h3>
+          <div className="space-y-2.5">
+            {(stats.languageDistribution || []).map(l => (
+              <BarRow key={l.language} label={LANG_LABELS[l.language] || l.language} count={l.count} max={maxLang} />
+            ))}
+            {!stats.languageDistribution?.length && <p className="text-sm text-gray-400">No data yet.</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom 2-col */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Top document types */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+          <h3 className="font-semibold text-gray-800 mb-4 text-sm">Top document types</h3>
+          <div className="space-y-2.5">
+            {stats.topDocumentTypes.map(d => (
+              <BarRow key={d.document_type} label={d.document_type || 'Unknown'} count={d.count} max={maxDoc} color="bg-indigo-500" />
+            ))}
             {stats.topDocumentTypes.length === 0 && <p className="text-sm text-gray-400">No data yet.</p>}
+          </div>
+        </div>
+
+        {/* Recent signups */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+          <h3 className="font-semibold text-gray-800 mb-4 text-sm">Recent signups</h3>
+          <div className="space-y-3">
+            {(stats.recentSignups || []).map(u => (
+              <div key={u.id} className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">{u.full_name || u.email || u.phone || '—'}</p>
+                  <p className="text-xs text-gray-400">{new Date(u.created_at).toLocaleDateString('en-GH', { day: 'numeric', month: 'short' })}</p>
+                </div>
+                <PlanBadge plan={u.plan} />
+              </div>
+            ))}
+            {!stats.recentSignups?.length && <p className="text-sm text-gray-400">No signups yet.</p>}
           </div>
         </div>
       </div>
@@ -142,15 +225,105 @@ function OverviewTab({ stats }) {
   );
 }
 
-function UsersTab() {
-  const [rows,    setRows]    = useState([]);
-  const [total,   setTotal]   = useState(0);
-  const [page,    setPage]    = useState(1);
+const RISK_COLORS = { HIGH: 'text-red-600 bg-red-50', MEDIUM: 'text-yellow-600 bg-yellow-50', LOW: 'text-green-600 bg-green-50' };
+
+function UserDetailDrawer({ userId, onClose }) {
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [search,  setSearch]  = useState('');
+
+  useEffect(() => {
+    adminApi.getUserDetail(userId)
+      .then(setData)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [userId]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={onClose}>
+      <div className="bg-white w-full max-w-md h-full overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
+          <h3 className="font-bold text-gray-900">User detail</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-20"><Spinner className="w-8 h-8 text-brand-600" /></div>
+        ) : data ? (
+          <div className="p-5 space-y-6">
+            {/* Identity */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="font-bold text-gray-900 text-lg">{data.user.full_name || '—'}</p>
+              <p className="text-sm text-gray-500">{data.user.email || data.user.phone}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <PlanBadge plan={data.user.plan} />
+                <span className="text-xs text-gray-400">Joined {fmtDate(data.user.created_at)}</span>
+              </div>
+              <div className="flex gap-4 mt-3 text-sm">
+                <div><p className="text-xs text-gray-400">Trial used</p><p className="font-semibold">{data.user.trial_analyses_used}</p></div>
+                <div><p className="text-xs text-gray-400">Docs this month</p><p className="font-semibold">{data.user.documents_this_month}</p></div>
+                <div><p className="text-xs text-gray-400">Payments</p><p className="font-semibold">{data.payments.length}</p></div>
+              </div>
+            </div>
+
+            {/* Analyses */}
+            <div>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Recent analyses ({data.analyses.length})</p>
+              {data.analyses.length === 0 ? <p className="text-sm text-gray-400">No analyses yet.</p> : (
+                <div className="space-y-2">
+                  {data.analyses.map(a => (
+                    <div key={a.id} className="flex items-center justify-between gap-2 py-2 border-b border-gray-50">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{a.document_type || 'Unknown'}</p>
+                        <p className="text-xs text-gray-400">{a.language?.toUpperCase()} · {fmt(a.tokens_used)} tokens · {fmtDate(a.created_at)}</p>
+                      </div>
+                      {a.overall_risk && (
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${RISK_COLORS[a.overall_risk] || 'bg-gray-100 text-gray-600'}`}>{a.overall_risk}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Payments */}
+            <div>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Payments</p>
+              {data.payments.length === 0 ? <p className="text-sm text-gray-400">No payments.</p> : (
+                <div className="space-y-2">
+                  {data.payments.map(p => (
+                    <div key={p.id} className="flex items-center justify-between text-sm py-1.5 border-b border-gray-50">
+                      <div>
+                        <p className="font-medium text-gray-800 capitalize">{p.plan_type} plan</p>
+                        <p className="text-xs text-gray-400">{fmtDate(p.created_at)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">{fmtGhs(p.amount_ghs)}</p>
+                        <span className={`text-xs ${p.status === 'success' ? 'text-green-600' : 'text-yellow-600'}`}>{p.status}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : <p className="p-5 text-gray-400">Failed to load user data.</p>}
+      </div>
+    </div>
+  );
+}
+
+function UsersTab() {
+  const [rows,       setRows]       = useState([]);
+  const [total,      setTotal]      = useState(0);
+  const [page,       setPage]       = useState(1);
+  const [loading,    setLoading]    = useState(true);
+  const [search,     setSearch]     = useState('');
   const [planFilter, setPlanFilter] = useState('');
-  const [editing, setEditing] = useState(null); // { userId, currentPlan }
-  const [saving,  setSaving]  = useState(false);
+  const [editPlan,   setEditPlan]   = useState(null);
+  const [saving,     setSaving]     = useState(false);
+  const [working,    setWorking]    = useState(null);
+  const [detail,     setDetail]     = useState(null);
+  const [newPlan,    setNewPlan]    = useState('');
 
   const load = useCallback(() => {
     setLoading(true);
@@ -165,30 +338,30 @@ function UsersTab() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function savePlan(userId, plan) {
+  async function savePlan(userId) {
+    if (!newPlan) return;
     setSaving(true);
-    try {
-      await adminApi.updatePlan(userId, plan);
-      setEditing(null);
-      load();
-    } catch (e) {
-      alert(e.message);
-    } finally {
-      setSaving(false);
-    }
+    try { await adminApi.updatePlan(userId, newPlan); setEditPlan(null); load(); }
+    catch (e) { alert(e.message); }
+    finally { setSaving(false); }
+  }
+
+  async function resetUsage(userId, name) {
+    if (!confirm(`Reset usage counters for ${name || 'this user'}? Their trial and monthly doc counts will go back to 0.`)) return;
+    setWorking(userId);
+    try { await adminApi.resetUsage(userId); load(); }
+    catch (e) { alert(e.message); }
+    finally { setWorking(null); }
   }
 
   return (
     <div>
-      {/* Filters */}
+      {detail && <UserDetailDrawer userId={detail} onClose={() => setDetail(null)} />}
+
       <div className="flex flex-wrap gap-3 mb-5">
-        <input
-          type="search"
-          placeholder="Search phone or name..."
-          value={search}
+        <input type="search" placeholder="Search name, email or phone…" value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          className="input text-sm flex-1 min-w-[160px]"
-        />
+          className="input text-sm flex-1 min-w-[200px]" />
         <select value={planFilter} onChange={(e) => { setPlanFilter(e.target.value); setPage(1); }} className="input text-sm">
           <option value="">All plans</option>
           {ALL_PLANS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -198,66 +371,47 @@ function UsersTab() {
       {loading ? (
         <div className="flex justify-center py-10"><Spinner className="w-8 h-8 text-brand-600" /></div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs text-gray-500 uppercase border-b border-gray-100">
-                <th className="pb-3 pr-4">User</th>
-                <th className="pb-3 pr-4">Plan</th>
-                <th className="pb-3 pr-4">Docs</th>
-                <th className="pb-3 pr-4">Joined</th>
-                <th className="pb-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {rows.map((u) => (
-                <tr key={u.id}>
-                  <td className="py-3 pr-4">
-                    <p className="font-medium text-gray-900 truncate max-w-[160px]">{u.full_name || '—'}</p>
-                    <p className="text-xs text-gray-400">{u.phone}</p>
-                  </td>
-                  <td className="py-3 pr-4">
-                    {editing?.userId === u.id ? (
-                      <div className="flex items-center gap-2">
-                        <select
-                          defaultValue={u.plan}
-                          id={`plan-select-${u.id}`}
-                          className="input text-xs py-1 px-2"
-                        >
-                          {ALL_PLANS.map((p) => <option key={p} value={p}>{p}</option>)}
-                        </select>
-                        <button
-                          onClick={() => savePlan(u.id, document.getElementById(`plan-select-${u.id}`).value)}
-                          disabled={saving}
-                          className="text-xs bg-brand-600 text-white px-2 py-1 rounded-lg"
-                        >
-                          {saving ? '...' : 'Save'}
-                        </button>
-                        <button onClick={() => setEditing(null)} className="text-xs text-gray-400">✕</button>
-                      </div>
-                    ) : (
-                      <PlanBadge plan={u.plan} />
-                    )}
-                  </td>
-                  <td className="py-3 pr-4 text-gray-600">{u.documents_this_month}</td>
-                  <td className="py-3 pr-4 text-gray-400 text-xs whitespace-nowrap">
-                    {new Date(u.created_at).toLocaleDateString('en-GH', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </td>
-                  <td className="py-3">
-                    <button
-                      onClick={() => setEditing({ userId: u.id })}
-                      className="text-xs text-brand-600 hover:underline"
-                    >
-                      Change plan
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {rows.length === 0 && (
-                <tr><td colSpan={5} className="py-10 text-center text-sm text-gray-400">No users found.</td></tr>
+        <div className="space-y-2">
+          {rows.map((u) => (
+            <div key={u.id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+              <div className="flex flex-wrap items-start gap-3">
+                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setDetail(u.id)}>
+                  <p className="font-semibold text-gray-900 hover:text-brand-600 transition-colors">{u.full_name || '—'}</p>
+                  <p className="text-xs text-gray-500">{u.email || u.phone}</p>
+                  <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                    <PlanBadge plan={u.plan} />
+                    <span className="text-xs text-gray-400">Docs: {u.documents_this_month} · Trial: {u.trial_analyses_used}</span>
+                    <span className="text-xs text-gray-400">Joined {new Date(u.created_at).toLocaleDateString('en-GH', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button onClick={() => setDetail(u.id)} className="text-xs text-gray-500 border border-gray-200 px-2.5 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">View</button>
+                  <button onClick={() => resetUsage(u.id, u.full_name)} disabled={working === u.id}
+                    className="text-xs text-orange-600 border border-orange-200 bg-orange-50 px-2.5 py-1.5 rounded-lg hover:bg-orange-100 transition-colors disabled:opacity-50">
+                    {working === u.id ? '…' : 'Reset'}
+                  </button>
+                  <button onClick={() => { setEditPlan(u.id); setNewPlan(u.plan); }}
+                    className="text-xs text-brand-600 border border-brand-200 bg-brand-50 px-2.5 py-1.5 rounded-lg hover:bg-brand-100 transition-colors">
+                    Plan
+                  </button>
+                </div>
+              </div>
+
+              {editPlan === u.id && (
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <select value={newPlan} onChange={e => setNewPlan(e.target.value)} className="input text-xs py-1.5 flex-1">
+                    {ALL_PLANS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                  <button onClick={() => savePlan(u.id)} disabled={saving}
+                    className="text-xs bg-brand-600 text-white px-3 py-1.5 rounded-lg disabled:opacity-50 font-semibold">
+                    {saving ? '…' : 'Save'}
+                  </button>
+                  <button onClick={() => setEditPlan(null)} className="text-xs text-gray-400 px-2">✕</button>
+                </div>
               )}
-            </tbody>
-          </table>
+            </div>
+          ))}
+          {rows.length === 0 && <p className="text-center text-sm text-gray-400 py-10">No users found.</p>}
         </div>
       )}
       <Pagination page={page} total={total} limit={20} onChange={setPage} />
@@ -535,7 +689,7 @@ function LawyersTab() {
       {panel && (
         <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 mb-6">
           <h3 className="font-semibold text-gray-800 mb-4 text-sm">
-            {panel === 'add' ? 'Add new lawyer' : `Edit — ${panel.lawyer.name}`}
+            {panel === 'add' ? 'Add new lawyer' : `Edit: ${panel.lawyer.name}`}
           </h3>
           <LawyerForm
             initial={panel === 'add' ? EMPTY_LAWYER : { ...panel.lawyer, specialties: panel.lawyer.specialties || [], languages: panel.lawyer.languages || ['en'] }}
@@ -641,9 +795,149 @@ function LawyersTab() {
   );
 }
 
+// ─── LawyerApplicationsTab ────────────────────────────────────────────────────
+
+function LawyerApplicationsTab() {
+  const [apps,     setApps]     = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [filter,   setFilter]   = useState('pending');
+  const [expanded, setExpanded] = useState(null);
+  const [notes,    setNotes]    = useState({});
+  const [working,  setWorking]  = useState(null);
+
+  function load(status) {
+    setLoading(true);
+    adminApi.getLawyerApplications(status)
+      .then(d => setApps(d.applications || []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }
+  useEffect(() => { load(filter); }, [filter]);
+
+  async function handleReview(id, action) {
+    if (!confirm(`${action === 'approve' ? 'Approve' : 'Reject'} this application? ${action === 'approve' ? 'The lawyer will be added to the public directory.' : ''}`)) return;
+    setWorking(id);
+    try {
+      await adminApi.reviewLawyerApplication(id, action, notes[id] || '');
+      load(filter);
+      setExpanded(null);
+    } catch (e) { alert(e.message); }
+    finally { setWorking(null); }
+  }
+
+  const STATUS_COLOR = { pending: 'bg-yellow-100 text-yellow-700', approved: 'bg-green-100 text-green-700', rejected: 'bg-red-100 text-red-700' };
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <h2 className="font-semibold text-gray-800">Lawyer Applications</h2>
+        <div className="flex gap-2">
+          {['pending', 'approved', 'rejected', 'all'].map(s => (
+            <button key={s} onClick={() => setFilter(s)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${filter === s ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-16"><Spinner className="w-8 h-8 text-brand-600" /></div>
+      ) : apps.length === 0 ? (
+        <div className="text-center py-16 text-gray-400">
+          <p className="text-4xl mb-3">📋</p>
+          <p className="font-medium">No {filter === 'all' ? '' : filter} applications</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {apps.map(app => (
+            <div key={app.id} className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+              <div className="p-4 flex flex-wrap items-start gap-4 cursor-pointer" onClick={() => setExpanded(expanded === app.id ? null : app.id)}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <p className="font-semibold text-gray-900">{app.full_name}</p>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[app.status] || 'bg-gray-100 text-gray-600'}`}>{app.status}</span>
+                  </div>
+                  <p className="text-sm text-gray-500">{app.region} · GBA {app.gba_number} · {app.years_experience} yrs exp</p>
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {(app.specialties || []).map(s => (
+                      <span key={s} className="text-xs bg-brand-50 text-brand-700 border border-brand-100 rounded-full px-2 py-0.5">{s}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xs text-gray-400">{fmtDate(app.created_at)}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{app.email}</p>
+                  <p className="text-xs text-gray-500">{app.phone}</p>
+                </div>
+              </div>
+
+              {expanded === app.id && (
+                <div className="border-t border-gray-100 p-4 bg-gray-50 space-y-4">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Bio</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{app.bio}</p>
+                  </div>
+                  {app.docs_url && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Verification documents</p>
+                      <a href={app.docs_url} target="_blank" rel="noopener noreferrer" className="text-sm text-brand-600 hover:underline break-all">{app.docs_url}</a>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Contact</p>
+                    <p className="text-sm text-gray-600">{app.email} · {app.phone}{app.whatsapp && ` · WA: ${app.whatsapp}`}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Consultation fee</p>
+                    <p className="text-sm text-gray-600">GH₵ {Number(app.consultation_fee_ghs).toFixed(0)} / session · Languages: {(app.languages || ['en']).join(', ')}</p>
+                  </div>
+                  {app.admin_notes && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Admin notes</p>
+                      <p className="text-sm text-gray-600">{app.admin_notes}</p>
+                    </div>
+                  )}
+                  {app.status === 'pending' && (
+                    <div className="space-y-3 pt-2">
+                      <textarea
+                        value={notes[app.id] || ''}
+                        onChange={e => setNotes(prev => ({ ...prev, [app.id]: e.target.value }))}
+                        placeholder="Admin notes (optional, visible in audit log)..."
+                        rows={2}
+                        className="input text-sm w-full resize-none"
+                      />
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => handleReview(app.id, 'approve')}
+                          disabled={working === app.id}
+                          className="px-5 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+                        >
+                          {working === app.id ? <Spinner className="w-4 h-4" /> : '✓'} Approve & list lawyer
+                        </button>
+                        <button
+                          onClick={() => handleReview(app.id, 'reject')}
+                          disabled={working === app.id}
+                          className="px-5 py-2 rounded-lg bg-red-100 text-red-700 text-sm font-semibold hover:bg-red-200 disabled:opacity-50 transition-colors"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── main ─────────────────────────────────────────────────────────────────────
 
-const TABS = ['Overview', 'Users', 'Lawyers', 'Audit Log'];
+const TABS = ['Overview', 'Users', 'Lawyers', 'Applications', 'Audit Log'];
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -688,25 +982,31 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-white border border-gray-100 rounded-xl p-1 w-fit mb-8 shadow-sm">
+        <div className="flex gap-1 bg-white border border-gray-100 rounded-xl p-1 w-fit mb-8 shadow-sm flex-wrap">
           {TABS.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 tab === t ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               {t}
+              {t === 'Applications' && stats?.pendingApplications > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  {stats.pendingApplications}
+                </span>
+              )}
             </button>
           ))}
         </div>
 
         {/* Tab content */}
-        {tab === 'Overview'  && <OverviewTab stats={stats} />}
-        {tab === 'Users'     && <UsersTab />}
-        {tab === 'Lawyers'   && <LawyersTab />}
-        {tab === 'Audit Log' && <AuditTab />}
+        {tab === 'Overview'      && <OverviewTab stats={stats} onTabChange={setTab} />}
+        {tab === 'Users'         && <UsersTab />}
+        {tab === 'Lawyers'       && <LawyersTab />}
+        {tab === 'Applications'  && <LawyerApplicationsTab />}
+        {tab === 'Audit Log'     && <AuditTab />}
       </main>
     </div>
   );
