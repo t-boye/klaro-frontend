@@ -1,114 +1,207 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { api } from '../lib/api';
 
-// Best BCP-47 codes for Ghanaian languages. Most browsers lack native
-// voices for Twi/Ga/Ewe/Dagbani/Fante, so they fall back gracefully to
-// the system default — the text is still read aloud, just phonetically.
-const VOICE_LANG = {
-  en:  'en-GH',
-  tw:  'ak',     // Akan/Twi — limited browser support
-  ga:  'en-GH',  // Ga — no standard BCP-47; fall back to English (Ghana)
-  ewe: 'ee',     // Ewe — ISO code exists, partial support
-  dag: 'ha',     // Dagbani — use Hausa as closest regional fallback
-  ha:  'ha',     // Hausa — reasonable support on modern browsers
-  fan: 'ak',     // Fante — another Akan dialect, same code
+// Languages routed to GhanaNLP backend for real native voices:
+//   tw  = Twi  (twi_speaker_4–9)
+//   ewe = Ewe  (ewe_speaker_3–4)
+//   fan = Fante → routed through Twi speaker (Akan dialect, ~80% shared phonology)
+// Everything else (en, ga, dag, ha) uses Web Speech API
+const GHANA_NLP_LANGS = new Set(['tw', 'ewe', 'fan']);
+
+// Web Speech API voice chain — best-effort for English + unsupported local langs
+const VOICE_CHAIN = {
+  en:  ['en-GH', 'en-NG', 'en-ZA', 'en-GB', 'en'],
+  ga:  ['en-GH', 'en-NG', 'en-ZA', 'en-GB', 'en'],
+  dag: ['ha', 'ha-NG', 'en-NG', 'en-GH', 'en'],
+  ha:  ['ha', 'ha-NG', 'en-NG', 'en-GH', 'en'],
+  fan: ['en-GH', 'en-NG', 'en-GB', 'en'],
 };
 
 const RATE_STEPS = [0.75, 1, 1.25, 1.5, 2];
 
-export function useVoiceReader() {
-  const [status,    setStatus]    = useState('idle');  // 'idle' | 'playing' | 'paused'
-  const [activeId,  setActiveId]  = useState(null);    // id of the item currently being spoken
-  const [preview,   setPreview]   = useState('');      // short excerpt of current text
-  const [rate,      setRateState] = useState(1.0);
+// ── Web Speech API voice loader ───────────────────────────────────────────────
+let _voices = [];
+function loadVoices() {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  const update = () => { const v = window.speechSynthesis.getVoices(); if (v.length) _voices = v; };
+  window.speechSynthesis.addEventListener('voiceschanged', update);
+  update();
+}
+loadVoices();
 
-  const queueRef = useRef([]);
-  const langRef  = useRef('en');
-  const rateRef  = useRef(1.0);
-  const nextRef  = useRef(null);
+function pickVoice(lang) {
+  const voices = _voices.length ? _voices : (window.speechSynthesis?.getVoices() || []);
+  const chain  = VOICE_CHAIN[lang] || VOICE_CHAIN.en;
+  for (const code of chain) {
+    const lc = code.toLowerCase();
+    const v  = voices.find(v => v.lang.toLowerCase() === lc)
+             || voices.find(v => v.lang.toLowerCase().startsWith(lc));
+    if (v) return v;
+  }
+  return voices[0] || null;
+}
+
+// ── Browser-side TTS cache ────────────────────────────────────────────────────
+// Prevents calling GhanaNLP API twice for the same text.
+// Keys: "lang::text". Values: Blob URLs.
+// Cleared when the page unloads (sessionStorage-lifetime).
+const _audioCache = new Map();
+
+function cacheKey(text, lang) { return `${lang}::${text.trim()}`; }
+
+// ── GhanaNLP audio player ─────────────────────────────────────────────────────
+async function playGhanaNLP(text, language, rate, { onStart, onEnd, onError }) {
+  const key = cacheKey(text, language);
+
+  let blobUrl = _audioCache.get(key);
+
+  if (!blobUrl) {
+    // Fetch from our backend (which calls GhanaNLP)
+    const { audio, contentType } = await api.tts(text, language);
+    const blob = base64ToBlob(audio, contentType || 'audio/wav');
+    blobUrl    = URL.createObjectURL(blob);
+    _audioCache.set(key, blobUrl);
+  }
+
+  const el        = new Audio(blobUrl);
+  el.playbackRate = rate;
+  el.onplay       = onStart;
+  el.onended      = onEnd;
+  el.onerror      = onError;
+
+  el.play().catch(onError);
+
+  // Return a stop/cleanup fn — do NOT revoke the URL since it's cached
+  return () => { el.pause(); el.src = ''; };
+}
+
+function base64ToBlob(b64, type) {
+  const bin = atob(b64);
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return new Blob([buf], { type });
+}
+
+// ── Hook ──────────────────────────────────────────────────────────────────────
+export function useVoiceReader() {
+  const [status,   setStatus]   = useState('idle');  // 'idle' | 'loading' | 'playing' | 'paused'
+  const [activeId, setActiveId] = useState(null);
+  const [preview,  setPreview]  = useState('');
+  const [rate,     setRateState] = useState(1.0);
+
+  const queueRef       = useRef([]);
+  const langRef        = useRef('en');
+  const rateRef        = useRef(1.0);
+  const activeIdxRef   = useRef(0);
+  const stopCurrentRef = useRef(null);
+  const cancelledRef   = useRef(false);
 
   const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
-  // nextRef holds the recursive speaker so callbacks always have the latest version
-  nextRef.current = (idx) => {
+  const cancelCurrent = useCallback(() => {
+    cancelledRef.current = true;
+    if (stopCurrentRef.current) { stopCurrentRef.current(); stopCurrentRef.current = null; }
+    if (supported) window.speechSynthesis.cancel();
+  }, [supported]);
+
+  const playItem = useCallback(async (idx) => {
     const queue = queueRef.current;
-    if (idx >= queue.length) {
-      setStatus('idle');
-      setActiveId(null);
-      setPreview('');
+    if (cancelledRef.current || idx >= queue.length) {
+      setStatus('idle'); setActiveId(null); setPreview('');
       return;
     }
-    const item = queue[idx];
+
+    activeIdxRef.current = idx;
+    const item       = queue[idx];
+    const lang       = langRef.current;
+    const shortPrev  = item.text.length > 90 ? item.text.slice(0, 90) + '…' : item.text;
+
+    const onEnd   = () => { if (!cancelledRef.current) playItem(idx + 1); };
+    const onError = () => { if (!cancelledRef.current) playItem(idx + 1); };
+
+    if (GHANA_NLP_LANGS.has(lang)) {
+      setStatus('loading');
+      try {
+        const cleanup = await playGhanaNLP(item.text, lang, rateRef.current, {
+          onStart: () => { setStatus('playing'); setActiveId(item.id); setPreview(shortPrev); },
+          onEnd,
+          onError,
+        });
+        if (cancelledRef.current) { cleanup(); return; }
+        stopCurrentRef.current = cleanup;
+      } catch {
+        // GhanaNLP failed — fall back to Web Speech API for this item
+        playWebSpeech(item, lang, shortPrev, onEnd, onError);
+      }
+    } else {
+      playWebSpeech(item, lang, shortPrev, onEnd, onError);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supported]);
+
+  function playWebSpeech(item, lang, shortPrev, onEnd, onError) {
+    if (!supported) { onEnd(); return; }
     const u    = new SpeechSynthesisUtterance(item.text);
-    u.lang     = VOICE_LANG[langRef.current] || 'en';
+    const v    = pickVoice(lang);
+    if (v) u.voice = v;
+    u.lang     = v ? v.lang : 'en-GH';
     u.rate     = rateRef.current;
     u.pitch    = 1.0;
     u.volume   = 1.0;
-
-    u.onstart = () => {
-      setStatus('playing');
-      setActiveId(item.id);
-      setPreview(item.text.length > 90 ? item.text.slice(0, 90) + '…' : item.text);
-    };
-    u.onend  = () => { nextRef.current?.(idx + 1); };
-    u.onerror = (e) => {
-      if (e.error !== 'interrupted' && e.error !== 'canceled') {
-        nextRef.current?.(idx + 1);
-      }
-    };
-
+    u.onstart  = () => { setStatus('playing'); setActiveId(item.id); setPreview(shortPrev); };
+    u.onend    = onEnd;
+    u.onerror  = (e) => { if (e.error !== 'interrupted' && e.error !== 'canceled') onError(); };
+    stopCurrentRef.current = () => window.speechSynthesis.cancel();
     window.speechSynthesis.speak(u);
-  };
+  }
 
-  useEffect(() => {
-    return () => { if (supported) window.speechSynthesis.cancel(); };
-  }, []);
+  useEffect(() => () => cancelCurrent(), [cancelCurrent]);
 
-  // Speak an ordered queue of { id, text } items
   const speakAll = useCallback((items, lang = 'en') => {
-    if (!supported || !items.length) return;
-    window.speechSynthesis.cancel();
-    langRef.current  = lang;
-    queueRef.current = items;
-    nextRef.current?.(0);
-  }, [supported]);
+    if (!items.length) return;
+    cancelCurrent();
+    cancelledRef.current = false;
+    langRef.current      = lang;
+    queueRef.current     = items;
+    playItem(0);
+  }, [cancelCurrent, playItem]);
 
-  // Speak a single text snippet
   const speakOne = useCallback((text, lang = 'en', id = '__single__') => {
-    if (!supported || !text) return;
-    window.speechSynthesis.cancel();
-    langRef.current  = lang;
-    queueRef.current = [{ id, text }];
-    nextRef.current?.(0);
-  }, [supported]);
+    if (!text) return;
+    cancelCurrent();
+    cancelledRef.current = false;
+    langRef.current      = lang;
+    queueRef.current     = [{ id, text }];
+    playItem(0);
+  }, [cancelCurrent, playItem]);
 
   const pause = useCallback(() => {
-    if (!supported) return;
-    window.speechSynthesis.pause();
+    if (supported) window.speechSynthesis.pause();
     setStatus('paused');
   }, [supported]);
 
   const resume = useCallback(() => {
-    if (!supported) return;
-    window.speechSynthesis.resume();
+    if (supported) window.speechSynthesis.resume();
     setStatus('playing');
   }, [supported]);
 
   const stop = useCallback(() => {
-    if (!supported) return;
-    window.speechSynthesis.cancel();
-    queueRef.current = [];
-    setStatus('idle');
-    setActiveId(null);
-    setPreview('');
-  }, [supported]);
+    cancelCurrent();
+    cancelledRef.current = true;
+    queueRef.current     = [];
+    setStatus('idle'); setActiveId(null); setPreview('');
+  }, [cancelCurrent]);
 
-  // Changing rate takes effect on the next utterance in the queue.
-  // If something is currently playing, the current sentence finishes at
-  // the old rate, then subsequent sentences use the new rate.
   const setRate = useCallback((r) => {
     rateRef.current = r;
     setRateState(r);
-  }, []);
+    if (status === 'playing' || status === 'loading') {
+      const idx = activeIdxRef.current;
+      cancelCurrent();
+      cancelledRef.current = false;
+      setTimeout(() => playItem(idx), 50);
+    }
+  }, [status, cancelCurrent, playItem]);
 
   return {
     status, activeId, preview, rate, rateSteps: RATE_STEPS,

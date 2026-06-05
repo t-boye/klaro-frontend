@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../lib/adminApi';
 import { clearAdminSession, getAdmin } from '../lib/adminAuth';
+import { startPreview } from '../components/PreviewBanner';
 import Spinner from '../components/Spinner';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -309,13 +310,15 @@ function getInitials(name, email, phone) {
 }
 
 function UserDetailDrawer({ userId, onClose, onUpdated }) {
-  const [data,       setData]       = useState(null);
-  const [loading,    setLoading]    = useState(true);
-  const [editPlan,   setEditPlan]   = useState(false);
-  const [newPlan,    setNewPlan]    = useState('');
-  const [savingPlan, setSavingPlan] = useState(false);
-  const [blocking,   setBlocking]   = useState(false);
-  const [resetting,  setResetting]  = useState(false);
+  const navigate = useNavigate();
+  const [data,          setData]          = useState(null);
+  const [loading,       setLoading]       = useState(true);
+  const [editPlan,      setEditPlan]      = useState(false);
+  const [newPlan,       setNewPlan]       = useState('');
+  const [savingPlan,    setSavingPlan]    = useState(false);
+  const [blocking,      setBlocking]      = useState(false);
+  const [resetting,     setResetting]     = useState(false);
+  const [impersonating, setImpersonating] = useState(false);
 
   function reload() {
     setLoading(true);
@@ -352,6 +355,21 @@ function UserDetailDrawer({ userId, onClose, onUpdated }) {
     try { await adminApi.resetUsage(userId); reload(); onUpdated?.(); }
     catch (e) { alert(e.message); }
     finally { setResetting(false); }
+  }
+
+  async function handleImpersonate() {
+    if (!data) return;
+    if (!confirm(`Preview app as ${data.user.full_name || data.user.email}? A temporary 15-min session will be created.`)) return;
+    setImpersonating(true);
+    try {
+      const { token, user } = await adminApi.impersonateUser(userId);
+      startPreview(token, user);
+      navigate('/dashboard');
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setImpersonating(false);
+    }
   }
 
   return (
@@ -447,6 +465,19 @@ function UserDetailDrawer({ userId, onClose, onUpdated }) {
                 {blocking ? '…' : data.user.blocked ? 'Unblock' : 'Block User'}
               </button>
             </div>
+
+            {/* Preview as user */}
+            <button
+              onClick={handleImpersonate}
+              disabled={impersonating}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors text-sm font-semibold disabled:opacity-50"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              {impersonating ? 'Starting preview…' : 'Preview as this user'}
+            </button>
 
             {/* Plan change form */}
             {editPlan && (

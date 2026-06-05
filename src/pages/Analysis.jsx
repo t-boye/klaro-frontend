@@ -377,7 +377,7 @@ export default function Analysis() {
                 }`}
               >
                 <SpeakerIcon pulse={voice.status === 'playing'} />
-                {voice.status !== 'idle' ? 'Stop' : 'Listen'}
+                {voice.status === 'loading' ? 'Loading…' : voice.status !== 'idle' ? 'Stop' : 'Listen'}
               </button>
             )}
 
@@ -713,15 +713,26 @@ export default function Analysis() {
 
             {/* Animated speaker icon */}
             <div className="w-8 h-8 rounded-lg bg-[#1B4332] flex items-center justify-center flex-shrink-0">
-              <SpeakerIcon className="w-4 h-4 text-[#52B788]" pulse={voice.status === 'playing'} />
+              {voice.status === 'loading' ? (
+                <svg className="w-4 h-4 text-[#52B788] animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+              ) : (
+                <SpeakerIcon className="w-4 h-4 text-[#52B788]" pulse={voice.status === 'playing'} />
+              )}
             </div>
 
             {/* Preview text */}
             <div className="flex-1 min-w-0">
               <p className="text-[10px] text-gray-500 leading-none mb-0.5 uppercase tracking-wide">
-                {voice.status === 'paused' ? 'Paused' : 'Now reading'}
+                {voice.status === 'loading' ? 'Preparing audio…'
+                  : voice.status === 'paused' ? 'Paused'
+                  : 'Now reading'}
               </p>
-              <p className="text-xs text-gray-200 font-medium truncate">{voice.preview}</p>
+              <p className="text-xs text-gray-200 font-medium truncate">
+                {voice.preview || (voice.status === 'loading' ? 'Fetching voice from GhanaNLP…' : '')}
+              </p>
             </div>
 
             {/* Speed control */}

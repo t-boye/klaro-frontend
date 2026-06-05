@@ -3,9 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { isLoggedIn } from './lib/auth';
 import { isAdminLoggedIn } from './lib/adminAuth';
 import { initTheme } from './lib/theme';
+import { getPreviewInfo } from './components/PreviewBanner';
 
 import SplashScreen    from './components/SplashScreen';
 import CookieBanner    from './components/CookieBanner';
+import PreviewBanner   from './components/PreviewBanner';
 import Landing         from './pages/Landing';
 import Auth            from './pages/Auth';
 import ResetPassword   from './pages/ResetPassword';
@@ -17,6 +19,7 @@ import SharedAnalysis  from './pages/SharedAnalysis';
 import Payment         from './pages/Payment';
 import Profile         from './pages/Profile';
 import Lawyers         from './pages/Lawyers';
+import LegalChat       from './pages/LegalChat';
 import PrivacyPolicy   from './pages/PrivacyPolicy';
 import Terms           from './pages/Terms';
 import AdminLogin      from './pages/AdminLogin';
@@ -49,6 +52,8 @@ export default function App() {
 
       <div className={`transition-opacity duration-300 ${splashDone ? 'opacity-100' : 'opacity-0'}`}>
         <BrowserRouter>
+          <PreviewBanner />
+          {getPreviewInfo() && <div className="h-10" />}
           <CookieBanner />
           <Routes>
             <Route path="/"                 element={<Landing />} />
@@ -64,6 +69,7 @@ export default function App() {
             <Route path="/payment/callback" element={<PrivateRoute><Payment /></PrivateRoute>} />
             <Route path="/profile"          element={<PrivateRoute><Profile /></PrivateRoute>} />
             <Route path="/lawyers"          element={<PrivateRoute><Lawyers /></PrivateRoute>} />
+            <Route path="/chat"             element={<PrivateRoute><LegalChat /></PrivateRoute>} />
             <Route path="/admin"            element={<Navigate to="/admin/login" replace />} />
             <Route path="/admin/login"      element={<AdminLogin />} />
             <Route path="/admin/dashboard"  element={<AdminRoute><AdminDashboard /></AdminRoute>} />

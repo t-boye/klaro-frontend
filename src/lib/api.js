@@ -81,6 +81,12 @@ export const api = {
     get:    ()     => request('/license'),
   },
 
+  legalChat: (question, language = 'en') =>
+    request('/legal-chat', { method: 'POST', body: JSON.stringify({ question, language }) }),
+
+  tts: (text, language) =>
+    request('/tts', { method: 'POST', body: JSON.stringify({ text, language }) }),
+
   lawyers: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/lawyers${qs ? '?' + qs : ''}`);
