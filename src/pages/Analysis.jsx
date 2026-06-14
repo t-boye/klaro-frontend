@@ -359,9 +359,9 @@ export default function Analysis() {
             Dashboard
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {expiring && (
-              <span className="text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 px-2.5 py-1 rounded-full">
+              <span className="hidden sm:inline text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 px-2.5 py-1 rounded-full">
                 Expires in {daysLeft}d
               </span>
             )}
@@ -370,38 +370,49 @@ export default function Analysis() {
             {voice.supported && (
               <button
                 onClick={() => voice.status !== 'idle' ? voice.stop() : voice.speakAll(readAllItems, lang)}
-                className={`flex items-center gap-1.5 text-xs font-medium rounded-lg px-3 py-1.5 transition-colors ${
+                className={`flex items-center gap-1.5 text-xs font-medium rounded-lg px-2 py-1.5 sm:px-3 transition-colors ${
                   voice.status !== 'idle'
                     ? 'bg-[#1B4332] text-white hover:bg-[#163829]'
                     : 'border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
               >
                 <SpeakerIcon pulse={voice.status === 'playing'} />
-                {voice.status === 'loading' ? 'Loading…' : voice.status !== 'idle' ? 'Stop' : 'Listen'}
+                <span className="hidden sm:inline">
+                  {voice.status === 'loading' ? 'Loading…' : voice.status !== 'idle' ? 'Stop' : 'Listen'}
+                </span>
               </button>
             )}
 
             <button onClick={handleWhatsApp}
-              className="no-print flex items-center gap-1.5 text-xs font-medium bg-[#25D366] text-white rounded-lg px-3 py-1.5 hover:bg-[#128C7E] transition-colors">
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+              className="no-print flex items-center gap-1.5 text-xs font-medium bg-[#25D366] text-white rounded-lg px-2 py-1.5 sm:px-3 hover:bg-[#128C7E] transition-colors">
+              <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/>
                 <path d="M11.998 2C6.477 2 2 6.477 2 12c0 1.99.583 3.845 1.587 5.403L2 22l4.688-1.542A9.932 9.932 0 0011.998 22c5.522 0 10-4.478 10-10s-4.478-10-10-10z"/>
               </svg>
-              WhatsApp
+              <span className="hidden sm:inline">WhatsApp</span>
             </button>
+
             <button onClick={handleShare} disabled={sharing}
-              className="flex items-center gap-1.5 text-xs font-medium border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-              {copied
-                ? <><svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>Copied</>
-                : <><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>Share</>
-              }
+              className="flex items-center gap-1.5 text-xs font-medium border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 sm:px-3 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              {copied ? (
+                <>
+                  <svg className="w-3.5 h-3.5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                  <span className="hidden sm:inline">Copied</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                  <span className="hidden sm:inline">Share</span>
+                </>
+              )}
             </button>
+
             <button onClick={() => window.print()}
-              className="flex items-center gap-1.5 text-xs font-medium border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              className="flex items-center gap-1.5 text-xs font-medium border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 sm:px-3 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
               </svg>
-              Export PDF
+              <span className="hidden sm:inline">Export PDF</span>
             </button>
           </div>
         </div>

@@ -8,16 +8,39 @@ import { api } from '../lib/api';
 // Everything else (en, ga, dag, ha) uses Web Speech API
 const GHANA_NLP_LANGS = new Set(['tw', 'ewe', 'fan']);
 
-// Web Speech API voice chain — best-effort for English + unsupported local langs
+// Web Speech API voice chain — best-effort fallback for all langs (incl. GhanaNLP fallback)
 const VOICE_CHAIN = {
   en:  ['en-GH', 'en-NG', 'en-ZA', 'en-GB', 'en'],
+  tw:  ['en-GH', 'en-NG', 'en-ZA', 'en-GB', 'en'],
+  ewe: ['en-GH', 'en-NG', 'en-ZA', 'en-GB', 'en'],
+  fan: ['en-GH', 'en-NG', 'en-GB', 'en'],
   ga:  ['en-GH', 'en-NG', 'en-ZA', 'en-GB', 'en'],
   dag: ['ha', 'ha-NG', 'en-NG', 'en-GH', 'en'],
   ha:  ['ha', 'ha-NG', 'en-NG', 'en-GH', 'en'],
-  fan: ['en-GH', 'en-NG', 'en-GB', 'en'],
 };
 
 const RATE_STEPS = [0.75, 1, 1.25, 1.5, 2];
+
+// Browsers block audio.play() called from async code unless the audio context
+// was already unlocked by a direct user gesture. This fires a silent 1-sample
+// burst during the synchronous click handler so subsequent async plays work.
+let _audioUnlocked = false;
+function unlockAudio() {
+  if (_audioUnlocked || typeof window === 'undefined') return;
+  _audioUnlocked = true;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    ctx.resume().catch(() => {});
+    setTimeout(() => ctx.close().catch(() => {}), 200);
+  } catch {}
+}
 
 // ── Web Speech API voice loader ───────────────────────────────────────────────
 let _voices = [];
@@ -48,6 +71,26 @@ function pickVoice(lang) {
 const _audioCache = new Map();
 
 function cacheKey(text, lang) { return `${lang}::${text.trim()}`; }
+
+// ── Background prefetch for GhanaNLP queue items ──────────────────────────────
+// Fire-and-forget: fetches items in batches of 3 so the cache is warm before
+// playItem reaches each entry. Errors are silently swallowed — playItem retries.
+async function prefetchQueue(items, language) {
+  const BATCH = 3;
+  for (let i = 0; i < items.length; i += BATCH) {
+    await Promise.allSettled(
+      items.slice(i, i + BATCH).map(async (item) => {
+        const key = cacheKey(item.text, language);
+        if (_audioCache.has(key)) return;
+        try {
+          const { audio, contentType } = await api.tts(item.text, language);
+          const blob = base64ToBlob(audio, contentType || 'audio/wav');
+          _audioCache.set(key, URL.createObjectURL(blob));
+        } catch {}
+      })
+    );
+  }
+}
 
 // ── GhanaNLP audio player ─────────────────────────────────────────────────────
 async function playGhanaNLP(text, language, rate, { onStart, onEnd, onError }) {
@@ -159,15 +202,21 @@ export function useVoiceReader() {
 
   const speakAll = useCallback((items, lang = 'en') => {
     if (!items.length) return;
+    unlockAudio();
     cancelCurrent();
     cancelledRef.current = false;
     langRef.current      = lang;
     queueRef.current     = items;
+    // Pre-warm the cache for the whole queue while item 0 is playing
+    if (GHANA_NLP_LANGS.has(lang) && items.length > 1) {
+      setTimeout(() => prefetchQueue(items.slice(1), lang), 0);
+    }
     playItem(0);
   }, [cancelCurrent, playItem]);
 
   const speakOne = useCallback((text, lang = 'en', id = '__single__') => {
     if (!text) return;
+    unlockAudio();
     cancelCurrent();
     cancelledRef.current = false;
     langRef.current      = lang;
