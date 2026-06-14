@@ -278,6 +278,16 @@ export default function Upload() {
                 Local language explanations require an <button type="button" onClick={() => setShowUpgrade(true)} className="underline font-medium">Individual plan or above</button>.
               </p>
             )}
+            {['ga', 'dag', 'ha'].includes(language) && (
+              <div className="flex items-start gap-2 mt-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-3 py-2.5">
+                <svg className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  <span className="font-semibold">Heads up:</span> Your document will be fully analysed, but clause explanations will be in <span className="font-semibold">English</span> — {language === 'ga' ? 'Ga' : language === 'dag' ? 'Dagbani' : 'Hausa'} text support is limited. Voice reading will use your device's built-in voice instead of a native {language === 'ga' ? 'Ga' : language === 'dag' ? 'Dagbani' : 'Hausa'} voice.
+                </p>
+              </div>
+            )}
           </div>
 
           {progress && !loading && (
