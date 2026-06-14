@@ -59,11 +59,11 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // Proxy /api → netlify functions:serve (port 9999)
+      // Proxy /api → Cloudflare Workers dev server (wrangler dev, port 8787)
       '/api': {
-        target: 'http://localhost:9999',
+        target: 'http://localhost:8787',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '/.netlify/functions/api'),
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

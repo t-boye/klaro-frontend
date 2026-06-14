@@ -1,6 +1,8 @@
 import { getToken } from './auth';
 
-const BASE = '/api';
+// In production, set VITE_API_BASE_URL=https://api.klarogh.com in Netlify env vars.
+// In local dev, the Vite proxy forwards /api → localhost:8787 (wrangler dev).
+const BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 async function request(path, options = {}) {
   const token = getToken();
