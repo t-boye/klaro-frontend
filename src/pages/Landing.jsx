@@ -539,7 +539,7 @@ function StepCard({ num, title, desc, icon }) {
   return (
     <div className="step-card" style={{ background: 'var(--lnd-t03)', border: '1px solid var(--lnd-t08)', borderRadius: 20, padding: '28px 24px', flex: 1, minWidth: 0 }}>
       <div className="step-icon-row" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 13, background: 'rgba(27,67,50,0.3)', border: '1px solid rgba(82,183,136,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
+        <div style={{ width: 44, height: 44, borderRadius: 13, background: 'rgba(27,67,50,0.3)', border: '1px solid rgba(82,183,136,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {icon}
         </div>
         <span style={{ fontSize: 13, fontWeight: 700, color: '#52B788', letterSpacing: '0.1em' }}>0{num}</span>
@@ -769,12 +769,6 @@ export default function Landing() {
 
         <div style={{ maxWidth: 780, margin: '0 auto', position: 'relative', animation: 'fadeInUp 0.7s ease' }}>
 
-          {/* Badge */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(82,183,136,0.1)', border: '1px solid rgba(82,183,136,0.25)', borderRadius: 20, padding: '6px 16px', marginBottom: 28 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#52B788', animation: 'pulseGlow 2s infinite', display: 'inline-block' }} />
-            <span style={{ fontSize: 13, color: '#52B788', fontWeight: 600, letterSpacing: '0.01em' }}>Built for Ghana</span>
-          </div>
-
           {/* Headline */}
           <h1 style={{ fontSize: 'clamp(38px, 5.5vw, 68px)', fontWeight: 900, lineHeight: 1.1, marginBottom: 24, letterSpacing: '-0.03em', color: 'var(--lnd-text)' }}>
             Understand your<br />
@@ -841,9 +835,6 @@ export default function Landing() {
       <section id="demo" style={{ padding: '96px 24px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ display: 'inline-block', background: 'rgba(27,67,50,0.4)', border: '1px solid rgba(82,183,136,0.2)', borderRadius: 20, padding: '5px 16px', marginBottom: 18 }}>
-              <span style={{ fontSize: 13, color: '#52B788', fontWeight: 600 }}>Live demo</span>
-            </div>
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, lineHeight: 1.12, margin: '0 0 14px', letterSpacing: '-0.02em', color: 'var(--lnd-text)' }}>
               See Klaro in action
             </h2>
@@ -861,18 +852,24 @@ export default function Landing() {
       <section id="how-it-works" style={{ padding: '80px 24px', borderTop: '1px solid var(--lnd-t06)' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
-            <div style={{ display: 'inline-block', background: 'rgba(27,67,50,0.35)', border: '1px solid rgba(82,183,136,0.2)', borderRadius: 20, padding: '5px 16px', marginBottom: 16 }}>
-              <span style={{ fontSize: 13, color: '#52B788', fontWeight: 600 }}>How Klaro works</span>
-            </div>
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, lineHeight: 1.12, margin: 0, letterSpacing: '-0.02em', color: 'var(--lnd-text)' }}>
               Three steps to understanding<br />
               <span style={{ color: '#52B788' }}>what you're signing</span>
             </h2>
           </div>
           <div className="steps-grid" style={{ display: 'flex', gap: 16 }}>
-            <StepCard num={1} icon="📎" title="Upload your document" desc="Drop a PDF, Word document, or paste the text. Your document is processed privately and nothing is stored without your permission." />
-            <StepCard num={2} icon="🧠" title="Klaro AI analyses it"  desc="Claude AI reads every clause and checks it against Ghana's Labour Act, Lands Act, Rent Act, and 12+ other laws." />
-            <StepCard num={3} icon="🎯" title="See what matters"      desc="Every clause gets a colour rating. RED means danger. BLUE means it's your right. GREEN means it's standard." />
+            <StepCard num={1}
+              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#52B788" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>}
+              title="Upload your document"
+              desc="PDF, Word, or paste the text directly. Processed securely — nothing stored without your consent." />
+            <StepCard num={2}
+              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#52B788" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>}
+              title="Klaro AI analyses it"
+              desc="Every clause is checked against Ghana's Labour Act, Lands Act, Rent Act, and 12+ other laws." />
+            <StepCard num={3}
+              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#52B788" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>}
+              title="See what matters"
+              desc="Every clause gets a colour rating. RED means danger. BLUE means it's your right. GREEN means it's standard." />
           </div>
         </div>
       </section>
@@ -881,9 +878,6 @@ export default function Landing() {
       <section id="ratings" style={{ padding: '80px 24px', borderTop: '1px solid var(--lnd-t06)' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ display: 'inline-block', background: 'var(--lnd-t04)', border: '1px solid var(--lnd-t08)', borderRadius: 20, padding: '5px 16px', marginBottom: 16 }}>
-              <span style={{ fontSize: 13, color: 'var(--lnd-t60)', fontWeight: 600 }}>The colour system</span>
-            </div>
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, lineHeight: 1.12, margin: '0 0 12px', letterSpacing: '-0.02em', color: 'var(--lnd-text)' }}>
               See the risk at a glance
             </h2>
@@ -908,11 +902,8 @@ export default function Landing() {
       <section id="pricing" style={{ padding: '80px 24px', borderTop: '1px solid var(--lnd-t06)' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
-            <div style={{ display: 'inline-block', background: 'rgba(27,67,50,0.35)', border: '1px solid rgba(82,183,136,0.2)', borderRadius: 20, padding: '5px 16px', marginBottom: 16 }}>
-              <span style={{ fontSize: 13, color: '#52B788', fontWeight: 600 }}>Pricing</span>
-            </div>
-            <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, margin: '0 0 12px', letterSpacing: '-0.02em', color: 'var(--lnd-text)' }}>Simple, fair pricing</h2>
-            <p style={{ color: 'var(--lnd-t40)', fontSize: 16 }}>Start free. Pay only when you need more.</p>
+            <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, margin: '0 0 12px', letterSpacing: '-0.02em', color: 'var(--lnd-text)' }}>No subscription traps</h2>
+            <p style={{ color: 'var(--lnd-t40)', fontSize: 16 }}>Start free. Pay per document, or go monthly — your call.</p>
           </div>
 
           <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
@@ -966,11 +957,11 @@ export default function Landing() {
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 700, height: 350, background: 'radial-gradient(ellipse, rgba(27,67,50,0.4) 0%, rgba(82,183,136,0.06) 50%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ maxWidth: 640, margin: '0 auto', textAlign: 'center', position: 'relative' }}>
           <h2 style={{ fontSize: 'clamp(32px, 4vw, 50px)', fontWeight: 900, lineHeight: 1.1, marginBottom: 16, letterSpacing: '-0.02em', color: 'var(--lnd-text)' }}>
-            Ready to understand<br />
-            <span style={{ color: '#52B788' }}>what you sign?</span>
+            Most people sign<br />
+            <span style={{ color: '#52B788' }}>without reading. Don't.</span>
           </h2>
           <p style={{ color: 'var(--lnd-t45)', fontSize: 18, marginBottom: 40 }}>
-            Start with 3 free analyses. No credit card, no lawyer needed.
+            3 free analyses — no card, no catch.
           </p>
           <Link to={loggedIn ? '/upload' : '/auth'} className="lnd-btn-primary" style={{ fontSize: 16, padding: '18px 40px' }}>
             Analyse your first document free →
@@ -1025,9 +1016,6 @@ export default function Landing() {
               >
                 Tboye Creative Solutions
               </a>
-            </p>
-            <p style={{ color: 'var(--lnd-t15)', fontSize: 13, margin: 0 }}>
-              Ghana's #1 AI Legal Platform
             </p>
           </div>
         </div>
