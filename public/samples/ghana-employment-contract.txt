@@ -1,0 +1,47 @@
+EMPLOYMENT CONTRACT
+Between: Accra Digital Services Limited (hereinafter "the Employer")
+And: [Employee Name] (hereinafter "the Employee")
+
+Date of Commencement: 1st July 2026
+Position: Junior Software Developer
+Location: Accra, Greater Accra Region, Ghana
+
+1. DUTIES AND RESPONSIBILITIES
+The Employee shall perform all duties assigned by management from time to time, including duties outside the scope of this role at the Employer's sole discretion and without additional compensation.
+
+2. REMUNERATION
+The Employee's monthly gross salary shall be GHS 3,500.00, payable on the last working day of each calendar month. The Employer reserves the right to revise, reduce, or withhold salary at any time without notice if performance is deemed unsatisfactory by the Employer.
+
+3. WORKING HOURS
+Standard working hours are 8:00am to 5:00pm, Monday to Friday. The Employee agrees to work additional hours, including weekends and public holidays, as required by the Employer without additional compensation or overtime pay.
+
+4. ANNUAL LEAVE
+The Employee is entitled to 15 working days of annual leave per calendar year after completion of 12 months of continuous service. Leave must be approved in advance and may be cancelled by the Employer at any time.
+
+5. PROBATIONARY PERIOD
+The Employee shall serve a probationary period of 6 months. During this period, the Employer may terminate employment at any time without notice, reason, or compensation.
+
+6. TERMINATION
+The Employer may terminate this contract at any time and for any reason — or no reason at all — by providing 7 days' written notice or payment in lieu thereof. The Employee must provide 3 months' written notice to resign, failing which the Employer may deduct the equivalent of 3 months' salary from any final payment.
+
+7. NON-COMPETE CLAUSE
+Upon termination of employment for any reason, the Employee agrees not to work for any competing business in Ghana or any other African country for a period of 36 months. A "competing business" is defined as any company that uses software, technology, or digital services in any capacity.
+
+8. CONFIDENTIALITY
+The Employee agrees to keep all company information, client data, business strategies, and salary information strictly confidential in perpetuity — including after termination of employment.
+
+9. INTELLECTUAL PROPERTY
+All work produced by the Employee, whether during working hours or personal time, using company equipment or personal equipment, shall be the exclusive property of the Employer.
+
+10. DEDUCTIONS
+The Employer may deduct from the Employee's salary any amount in respect of damages, losses, or costs deemed by the Employer to have been caused by the Employee's negligence or error, at the Employer's sole discretion.
+
+11. GOVERNING LAW
+This contract shall be governed by the laws of Ghana. Any disputes shall be resolved exclusively by arbitration, waiving the Employee's right to pursue claims through the National Labour Commission or the courts.
+
+12. ENTIRE AGREEMENT
+This contract constitutes the entire agreement between the parties. The Employee acknowledges having read and understood all terms and agrees to be bound by them.
+
+Signed by the Employer: _______________________
+Signed by the Employee: _______________________
+Date: ____________________________

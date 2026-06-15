@@ -69,3 +69,10 @@ html.dark .btn-secondary {
 html.dark .btn-secondary:hover {
   background-color: #1f2937;
 }
+
+/* Push page content above the fixed mobile bottom tab bar */
+@media (max-width: 1023px) {
+  body {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
+}
