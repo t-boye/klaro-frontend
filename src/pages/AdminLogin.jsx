@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../lib/adminApi';
 import { setAdminSession } from '../lib/adminAuth';
 import Spinner from '../components/Spinner';
+import PasswordToggle from '../components/PasswordToggle';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
 
@@ -18,7 +20,7 @@ export default function AdminLogin() {
     try {
       const data = await adminApi.login(email, password);
       setAdminSession(data.token, data.admin);
-      navigate('/admin/dashboard');
+      navigate('/klaro-hub/dashboard');
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {
@@ -42,14 +44,14 @@ export default function AdminLogin() {
             Klaro Admin
           </h1>
           <p className="text-[#52B788] text-sm leading-relaxed">
-            Manage users, lawyers, and document analysis for Ghana's legal AI platform.
+            Manage users, lawyers, and document analysis for Africa's legal AI platform.
           </p>
 
           <div className="mt-12 grid grid-cols-3 gap-4">
             {[
               { stat: 'AI', label: 'Powered' },
               { stat: '7+', label: 'Languages' },
-              { stat: 'GH', label: 'Ghana-first' },
+              { stat: '9', label: 'Countries' },
             ].map(({ stat, label }) => (
               <div key={stat} className="bg-white/10 rounded-xl py-3 px-2">
                 <p className="text-xl font-bold text-white">{stat}</p>
@@ -98,16 +100,20 @@ export default function AdminLogin() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
-                className="w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3 text-sm
-                  focus:outline-none focus:ring-2 focus:ring-[#52B788] focus:border-[#1B4332]
-                  placeholder-gray-400 transition-colors"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3 pr-12 text-sm
+                    focus:outline-none focus:ring-2 focus:ring-[#52B788] focus:border-[#1B4332]
+                    placeholder-gray-400 transition-colors"
+                  required
+                  autoComplete="current-password"
+                />
+                <PasswordToggle show={showPass} onToggle={() => setShowPass(!showPass)} />
+              </div>
             </div>
 
             {error && (

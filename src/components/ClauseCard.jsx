@@ -95,10 +95,10 @@ export default function ClauseCard({ clause, lang, onSpeak, isActive }) {
               </div>
             )}
 
-            {clause.ghanaContext && (
+            {(clause.countryContext || clause.ghanaContext) && (
               <div className="rounded-lg bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-800 px-3 py-2.5 text-xs text-brand-700 dark:text-brand-400 leading-relaxed">
-                <p className="font-bold mb-0.5">In Ghana</p>
-                <p>{clause.ghanaContext}</p>
+                <p className="font-bold mb-0.5">Local law context</p>
+                <p>{clause.countryContext || clause.ghanaContext}</p>
               </div>
             )}
 
@@ -111,7 +111,7 @@ export default function ClauseCard({ clause, lang, onSpeak, isActive }) {
 
             {clause.relevantLaw && (
               <p className="text-xs text-gray-400 dark:text-gray-500">
-                <span className="font-semibold">Ghana law: </span>{clause.relevantLaw}
+                <span className="font-semibold">Relevant law: </span>{clause.relevantLaw}
               </p>
             )}
 

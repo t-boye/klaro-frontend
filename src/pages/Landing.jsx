@@ -897,7 +897,9 @@ export default function Landing() {
         @media (max-width: 768px) {
           .steps-grid      { flex-direction: column !important; }
           .how-it-works-grid { grid-template-columns: 1fr !important; }
-          .how-it-works-left { position: static !important; }
+          .how-it-works-left { position: static !important; text-align: center !important; }
+          .how-it-works-label { text-align: center !important; }
+          .how-it-works-left a { justify-content: center !important; }
           .stats-row       { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
           .ratings-grid    { grid-template-columns: 1fr 1fr !important; }
           .pricing-grid    { grid-template-columns: 1fr 1fr !important; }
@@ -1143,14 +1145,14 @@ export default function Landing() {
       <section id="how-it-works" style={{ padding: '80px 24px', borderTop: '1px solid var(--lnd-t06)' }}>
         <div className="how-it-works-grid" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 80px', alignItems: 'start' }}>
           <div className="how-it-works-left" style={{ position: 'sticky', top: 80 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#52B788', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 16 }}>How it works</p>
-            <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 42px)', fontWeight: 900, lineHeight: 1.12, margin: '0 0 20px', letterSpacing: '-0.02em', color: 'var(--lnd-text)' }}>
+            <p className="how-it-works-label" style={{ fontSize: 11, fontWeight: 700, color: '#52B788', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 16 }}>How it works</p>
+            <h2 className="how-it-works-label" style={{ fontSize: 'clamp(26px, 3.5vw, 42px)', fontWeight: 900, lineHeight: 1.12, margin: '0 0 20px', letterSpacing: '-0.02em', color: 'var(--lnd-text)' }}>
               {t('landing.howTitle')}
             </h2>
-            <p style={{ fontSize: 16, lineHeight: 1.7, color: 'var(--lnd-t45)', margin: '0 0 32px' }}>
+            <p className="how-it-works-label" style={{ fontSize: 16, lineHeight: 1.7, color: 'var(--lnd-t45)', margin: '0 0 32px' }}>
               {t('landing.howSub')}
             </p>
-            <a href={`#demo`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: '#52B788', textDecoration: 'none' }}>
+            <a className="how-it-works-label" href={`#demo`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: '#52B788', textDecoration: 'none' }}>
               See a demo below ↓
             </a>
           </div>

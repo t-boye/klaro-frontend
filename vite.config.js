@@ -11,7 +11,7 @@ export default defineConfig({
       manifest: {
         name: 'Klaro – Legal Document Explainer',
         short_name: 'Klaro',
-        description: 'Understand any legal document in plain language. Built for Ghanaians.',
+        description: 'Understand any legal document in plain language. Built for Africans.',
         theme_color: '#1B4332',
         background_color: '#ffffff',
         display: 'standalone',

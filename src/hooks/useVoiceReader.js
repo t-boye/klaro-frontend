@@ -17,6 +17,9 @@ const VOICE_CHAIN = {
   ga:  ['en-GH', 'en-NG', 'en-ZA', 'en-GB', 'en'],
   dag: ['ha', 'ha-NG', 'en-NG', 'en-GH', 'en'],
   ha:  ['ha', 'ha-NG', 'en-NG', 'en-GH', 'en'],
+  sw:  ['sw', 'sw-KE', 'sw-TZ', 'en-KE', 'en'],
+  fr:  ['fr-FR', 'fr-BE', 'fr-CH', 'fr', 'en'],
+  ar:  ['ar-EG', 'ar-SA', 'ar', 'en'],
 };
 
 const RATE_STEPS = [0.75, 1, 1.25, 1.5, 2];
@@ -164,17 +167,27 @@ export function useVoiceReader() {
 
     if (GHANA_NLP_LANGS.has(lang)) {
       setStatus('loading');
+      // 6-second timeout — if GhanaNLP is too slow, fall back to Web Speech immediately
+      let timedOut = false;
+      const fallbackTimer = setTimeout(() => {
+        if (cancelledRef.current) return;
+        timedOut = true;
+        playWebSpeech(item, lang, shortPrev, onEnd, onError);
+      }, 6000);
       try {
         const cleanup = await playGhanaNLP(item.text, lang, rateRef.current, {
           onStart: () => { setStatus('playing'); setActiveId(item.id); setPreview(shortPrev); },
           onEnd,
           onError,
         });
-        if (cancelledRef.current) { cleanup(); return; }
+        clearTimeout(fallbackTimer);
+        if (cancelledRef.current || timedOut) { cleanup(); return; }
         stopCurrentRef.current = cleanup;
       } catch {
-        // GhanaNLP failed — fall back to Web Speech API for this item
-        playWebSpeech(item, lang, shortPrev, onEnd, onError);
+        clearTimeout(fallbackTimer);
+        if (!timedOut && !cancelledRef.current) {
+          playWebSpeech(item, lang, shortPrev, onEnd, onError);
+        }
       }
     } else {
       playWebSpeech(item, lang, shortPrev, onEnd, onError);

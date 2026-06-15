@@ -205,6 +205,27 @@ function OverviewTab({ stats, onTabChange }) {
         />
       </div>
 
+      {/* Templates stats */}
+      {stats.templates && (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+          <StatCard
+            label="Templates generated" value={fmt(stats.templates.total)} sub={`+${fmt(stats.templates.last30d)} last 30d`}
+            accent="#0891B2"
+            icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>}
+          />
+          {stats.templates.topTypes?.length > 0 && (
+            <div className="col-span-1 lg:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm" style={{ borderTop: '3px solid #0891B2' }}>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Top template types</p>
+              <div className="space-y-2">
+                {stats.templates.topTypes.map(tt => (
+                  <BarRow key={tt.template_type} label={tt.template_type} count={tt.count} max={stats.templates.topTypes[0]?.count || 1} color="bg-cyan-500" />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Daily activity bar chart */}
       <SectionCard title="Daily analyses — last 14 days">
         {stats.dailyActivity.length === 0 ? (
@@ -1386,6 +1407,82 @@ function SecurityTab() {
   );
 }
 
+// ─── TemplatesTab ────────────────────────────────────────────────────────────
+
+const TEMPLATE_TYPE_LABELS = {
+  tenancy: 'Tenancy Agreement', employment: 'Employment Contract', nda: 'NDA',
+  freelance: 'Freelance Contract', loan: 'Loan Agreement', music: 'Music Contract',
+  partnership: 'Partnership Agreement', sales: 'Sales Agreement', service: 'Service Agreement', will: 'Will & Testament',
+};
+
+function TemplatesTab() {
+  const [templates, setTemplates] = useState([]);
+  const [total,     setTotal]     = useState(0);
+  const [page,      setPage]      = useState(1);
+  const [loading,   setLoading]   = useState(true);
+  const [deleting,  setDeleting]  = useState(null);
+
+  function load(p = 1) {
+    setLoading(true);
+    adminApi.getTemplates({ page: p })
+      .then(d => { setTemplates(d.templates || []); setTotal(d.pagination?.total ?? 0); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }
+  useEffect(() => { load(page); }, [page]);
+
+  async function handleDelete(id) {
+    if (!confirm('Delete this template permanently?')) return;
+    setDeleting(id);
+    try { await adminApi.deleteTemplate(id); load(page); }
+    catch (e) { alert(e.message); }
+    finally { setDeleting(null); }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h3 className="font-semibold text-gray-800 text-sm">All Generated Templates ({fmt(total)})</h3>
+          {loading && <Spinner className="w-4 h-4 text-[#52B788]" />}
+        </div>
+        {!loading && templates.length === 0 ? (
+          <div className="text-center py-10 text-gray-400 text-sm">No templates generated yet.</div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {templates.map(t => (
+              <div key={t.id} className="px-5 py-3 flex items-center gap-4 hover:bg-gray-50 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">
+                    {t.title || TEMPLATE_TYPE_LABELS[t.template_type] || t.template_type}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5 truncate">
+                    {t.full_name || t.email || 'Unknown user'} · {t.country} · {t.language?.toUpperCase()} · {fmtDate(t.created_at)}
+                  </p>
+                </div>
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full flex-shrink-0 hidden sm:block">
+                  {TEMPLATE_TYPE_LABELS[t.template_type] || t.template_type}
+                </span>
+                {t.tokens_used > 0 && (
+                  <span className="text-xs text-gray-400 flex-shrink-0 hidden md:block">{fmt(t.tokens_used)} tok</span>
+                )}
+                <button
+                  onClick={() => handleDelete(t.id)}
+                  disabled={deleting === t.id}
+                  className="text-xs text-red-600 border border-red-200 bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 flex-shrink-0"
+                >
+                  {deleting === t.id ? '…' : 'Delete'}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <Pagination page={page} total={total} limit={20} onChange={p => { setPage(p); load(p); }} />
+      </div>
+    </div>
+  );
+}
+
 // ─── Nav items ────────────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
@@ -1410,6 +1507,10 @@ const NAV_ITEMS = [
     icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
   },
   {
+    id: 'Templates', label: 'Templates',
+    icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+  },
+  {
     id: 'Security', label: 'Security',
     icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
   },
@@ -1421,6 +1522,7 @@ const PAGE_TITLES = {
   Lawyers:      { title: 'Lawyer Directory',  sub: 'Manage the public lawyer directory' },
   Applications: { title: 'Applications',      sub: 'Review lawyer applications for the directory' },
   'Audit Log':  { title: 'Audit Log',         sub: 'All platform events and admin actions' },
+  Templates:    { title: 'Templates',         sub: 'All AI-generated legal document templates' },
   Security:     { title: 'Security',          sub: 'IP blocking and access control' },
 };
 
@@ -1437,13 +1539,13 @@ export default function AdminDashboard() {
     adminApi.stats()
       .then(setStats)
       .catch((e) => {
-        if (e.status === 401) { clearAdminSession(); navigate('/admin/login'); }
+        if (e.status === 401) { clearAdminSession(); navigate('/klaro-hub'); }
       });
   }, [navigate]);
 
   function logout() {
     clearAdminSession();
-    navigate('/admin/login');
+    navigate('/klaro-hub');
   }
 
   return (
@@ -1554,6 +1656,7 @@ export default function AdminDashboard() {
           {tab === 'Lawyers'       && <LawyersTab />}
           {tab === 'Applications'  && <LawyerApplicationsTab />}
           {tab === 'Audit Log'     && <AuditTab />}
+          {tab === 'Templates'     && <TemplatesTab />}
           {tab === 'Security'      && <SecurityTab />}
         </main>
       </div>

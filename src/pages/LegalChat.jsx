@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { clearSession } from '../lib/auth';
 import Navbar from '../components/Navbar';
+import { useLang } from '../context/LangContext';
 
 const LANG_LABELS = {
   en: 'English', tw: 'Twi', ga: 'Ga', ewe: 'Ewe', dag: 'Dagbani', ha: 'Hausa', fan: 'Fante',
@@ -81,9 +82,10 @@ function TypingIndicator() {
 
 export default function LegalChat() {
   const navigate  = useNavigate();
+  const { t }     = useLang();
   const [messages, setMessages] = useState([]);
   const [input,    setInput]    = useState('');
-  const [lang,     setLang]     = useState('en');
+  const [respLang, setRespLang] = useState('en');
   const [loading,  setLoading]  = useState(false);
   const [quota,    setQuota]    = useState(null); // { remaining, max, plan }
   const bottomRef = useRef(null);
@@ -103,7 +105,7 @@ export default function LegalChat() {
     setLoading(true);
 
     try {
-      const data = await api.legalChat(trimmed, lang);
+      const data = await api.legalChat(trimmed, respLang);
       setMessages(prev => [...prev, { role: 'assistant', text: data.answer, id: Date.now() + 1 }]);
       if (data.remaining !== null && data.remaining !== undefined) {
         setQuota({ remaining: data.remaining, max: data.limit, plan: data.plan });
@@ -111,9 +113,7 @@ export default function LegalChat() {
     } catch (e) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        text: e.status === 403
-          ? "You've reached your question limit for this plan. Upgrade to continue asking Klaro legal questions."
-          : 'Sorry, I could not get an answer right now. Please try again in a moment.',
+        text: e.status === 403 ? t('chat.errorLimit') : t('chat.errorGeneric'),
         id: Date.now() + 1,
         error: e.status === 403 ? null : e.message,
       }]);
@@ -144,8 +144,8 @@ export default function LegalChat() {
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="font-bold text-gray-900 dark:text-white text-lg">Legal Chat</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Ask any question about Ghanaian law — no document needed.</p>
+              <h1 className="font-bold text-gray-900 dark:text-white text-lg">{t('chat.title')}</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('chat.subtitle')}</p>
             </div>
 
             {/* Quota badge */}
@@ -158,7 +158,7 @@ export default function LegalChat() {
                   : 'bg-green-50 border-green-200 text-green-700'
               }`}>
                 <p className="text-base font-black">{quota.remaining}</p>
-                <p>left</p>
+                <p>{t('chat.left')}</p>
               </div>
             )}
           </div>
@@ -166,10 +166,10 @@ export default function LegalChat() {
           {/* Language + plan info row */}
           <div className="flex items-center gap-3 mt-4 flex-wrap">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400 font-medium">Language:</span>
+              <span className="text-xs text-gray-400 font-medium">{t('chat.langLabel')}:</span>
               <select
-                value={lang}
-                onChange={e => setLang(e.target.value)}
+                value={respLang}
+                onChange={e => setRespLang(e.target.value)}
                 className="input text-xs py-1.5 pr-6 w-auto"
               >
                 {Object.entries(LANG_LABELS).map(([code, label]) => (
@@ -193,8 +193,8 @@ export default function LegalChat() {
             /* Empty state — quick prompts */
             <div className="flex-1 flex flex-col items-center justify-center gap-6 py-8">
               <div className="text-center">
-                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">Ask me anything about Ghanaian law</p>
-                <p className="text-gray-400 dark:text-gray-500 text-xs">or pick a common question below</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">{t('chat.emptyTitle')}</p>
+                <p className="text-gray-400 dark:text-gray-500 text-xs">{t('chat.quickPrompts')}</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-xl">
                 {QUICK_PROMPTS.map((p, i) => (
@@ -228,11 +228,11 @@ export default function LegalChat() {
           }`}>
             <p className={quota.remaining === 0 ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'}>
               {quota.remaining === 0
-                ? 'You have used all your questions for this plan.'
-                : `Only ${quota.remaining} question${quota.remaining !== 1 ? 's' : ''} left.`}
+                ? t('chat.limitExhausted')
+                : t('chat.limitLabel').replace('{remaining}', quota.remaining).replace('{max}', quota.max)}
             </p>
             <Link to="/payment" className="flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#1B4332] text-white hover:bg-[#163829] transition-colors">
-              Upgrade
+              {t('chat.upgrade')}
             </Link>
           </div>
         )}
@@ -245,7 +245,7 @@ export default function LegalChat() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask a legal question…"
+              placeholder={t('chat.placeholder')}
               rows={1}
               disabled={quota?.remaining === 0 && quota?.max !== null}
               className="flex-1 bg-transparent text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 resize-none outline-none min-h-[24px] max-h-[160px] leading-relaxed disabled:opacity-50"

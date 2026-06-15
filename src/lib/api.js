@@ -34,9 +34,11 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  geo: () => request('/geo'),
+
   auth: {
-    register:       (email, password, full_name) =>
-      request('/auth/register',        { method: 'POST', body: JSON.stringify({ email, password, full_name }) }),
+    register:       (email, password, full_name, country) =>
+      request('/auth/register',        { method: 'POST', body: JSON.stringify({ email, password, full_name, country }) }),
     login:          (email, password) =>
       request('/auth/login',           { method: 'POST', body: JSON.stringify({ email, password }) }),
     googleAuth:     (id_token) =>
@@ -94,7 +96,20 @@ export const api = {
     return request(`/lawyers${qs ? '?' + qs : ''}`);
   },
 
+  legalLibrary: (field, country) => {
+    const qs = new URLSearchParams({ field, ...(country && { country }) }).toString();
+    return request(`/legal-library?${qs}`);
+  },
+
   lawyerApplication: {
     submit: (data) => request('/lawyer-applications', { method: 'POST', body: JSON.stringify(data) }),
+  },
+
+  templates: {
+    listTypes:   ()       => request('/templates/types'),
+    listHistory: ()       => request('/templates/history'),
+    generate:    (data)   => request('/templates/generate', { method: 'POST', body: JSON.stringify(data) }),
+    getById:     (id)     => request(`/templates/${id}`),
+    remove:      (id)     => request(`/templates/${id}`, { method: 'DELETE' }),
   },
 };

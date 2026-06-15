@@ -1,6 +1,6 @@
 import { getAdminToken } from './adminAuth';
 
-const BASE = '/api';
+const BASE = (import.meta.env.VITE_API_BASE_URL || '/api');
 
 async function request(path, options = {}) {
   const token = getAdminToken();
@@ -40,4 +40,7 @@ export const adminApi = {
   getBlockedIPs:  ()           => request('/admin/blocked-ips'),
   addBlockedIP:   (ip, reason) => request('/admin/blocked-ips', { method: 'POST', body: JSON.stringify({ ip, reason }) }),
   removeBlockedIP:(ip)         => request(`/admin/blocked-ips/${encodeURIComponent(ip)}`, { method: 'DELETE' }),
+  // Templates
+  getTemplates:      (params = {}) => request('/admin/templates?' + new URLSearchParams(params).toString()),
+  deleteTemplate:    (id)          => request(`/admin/templates/${id}`, { method: 'DELETE' }),
 };

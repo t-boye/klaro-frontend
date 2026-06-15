@@ -5,6 +5,7 @@ import { clearSession, getUser, getToken, setSession } from '../lib/auth';
 import RiskBadge from '../components/RiskBadge';
 import Navbar from '../components/Navbar';
 import UpgradeModal from '../components/UpgradeModal';
+import { useLang } from '../context/LangContext';
 
 const PAGE_SIZE = 10;
 
@@ -13,20 +14,20 @@ function daysUntil(dateStr) {
   return Math.ceil((new Date(dateStr) - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
-function monthGroup(dateStr) {
+function monthGroup(dateStr, t) {
   const d    = new Date(dateStr);
   const now  = new Date();
   const diff = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
-  if (diff === 0) return 'This month';
-  if (diff === 1) return 'Last month';
+  if (diff === 0) return t('dashboard.thisMonth');
+  if (diff === 1) return t('dashboard.lastMonth');
   return d.toLocaleDateString('en-GH', { month: 'long', year: 'numeric' });
 }
 
-function groupByMonth(analyses) {
+function groupByMonth(analyses, t) {
   const groups = [];
   let current  = null;
   for (const a of analyses) {
-    const label = monthGroup(a.created_at);
+    const label = monthGroup(a.created_at, t);
     if (!current || current.label !== label) {
       current = { label, items: [] };
       groups.push(current);
@@ -235,6 +236,7 @@ function AnalysisCard({ a, renaming, renameVal, setRenameVal, onStartRename, onS
 export default function Dashboard() {
   const navigate = useNavigate();
   const user     = getUser();
+  const { t }    = useLang();
 
   const [analyses,     setAnalyses]     = useState([]);
   const [license,      setLicense]      = useState(null);
@@ -354,7 +356,7 @@ export default function Dashboard() {
     setRenaming(null); setRenameVal('');
   }
 
-  const groups       = groupByMonth(analyses);
+  const groups       = groupByMonth(analyses, t);
   const isFiltered   = !!(search || riskFilter);
 
   return (
@@ -367,36 +369,50 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {user?.full_name ? `Hi, ${user.full_name.split(' ')[0]}` : 'Dashboard'}
+              {user?.full_name ? `${t('dashboard.hi')}, ${user.full_name.split(' ')[0]}` : t('nav.dashboard')}
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Your document analyses</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{t('dashboard.yourDocs')}</p>
           </div>
           <Link to="/upload" className="btn-primary text-sm gap-1.5">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
             </svg>
-            Analyse
+            {t('dashboard.analyseBtn')}
           </Link>
         </div>
 
         <PlanBanner license={license} onUpgrade={() => setShowUpgrade(true)} />
         {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
 
-        {/* Legal Chat card */}
-        <Link to="/chat" className="flex items-center gap-4 bg-gradient-to-r from-[#1B4332] to-[#2d6a4f] text-white rounded-2xl p-4 mb-5 hover:from-[#163829] hover:to-[#255a43] transition-all group">
-          <div className="w-11 h-11 rounded-xl bg-[#52B788]/25 flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-[#52B788]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        {/* Quick-action row: country prompt + legal chat side by side */}
+        <div className="flex gap-3 mb-5">
+          {/* Country prompt — only shown when country not set */}
+          {!user?.country && (
+            <Link to="/profile" className="flex items-center gap-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-2xl px-3 py-3 hover:border-amber-300 transition-colors flex-1 min-w-0">
+              <span className="text-xl flex-shrink-0">🌍</span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-amber-800 dark:text-amber-300 leading-tight truncate">{t('dashboard.countryPromptTitle')}</p>
+                <p className="text-xs text-amber-600 dark:text-amber-500 mt-0.5 leading-tight line-clamp-2">{t('dashboard.countryPromptSub')}</p>
+              </div>
+            </Link>
+          )}
+
+          {/* Legal Chat card */}
+          <Link to="/chat" className={`flex items-center gap-3 bg-gradient-to-r from-[#1B4332] to-[#2d6a4f] text-white rounded-2xl px-3 py-3 hover:from-[#163829] hover:to-[#255a43] transition-all group flex-1 min-w-0 ${user?.country ? 'w-full' : ''}`}>
+            <div className="w-9 h-9 rounded-xl bg-[#52B788]/25 flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-[#52B788]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-xs text-white leading-tight">{t('dashboard.chatTitle')}</p>
+              <p className="text-[#52B788]/80 text-xs mt-0.5 leading-tight line-clamp-2">{t('dashboard.chatSub')}</p>
+            </div>
+            <svg className="w-3.5 h-3.5 text-[#52B788]/60 group-hover:text-[#52B788] group-hover:translate-x-0.5 transition-all flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-sm">Legal Chat</p>
-            <p className="text-[#52B788]/80 text-xs mt-0.5">Ask any question about Ghanaian law — no document needed</p>
-          </div>
-          <svg className="w-4 h-4 text-[#52B788]/60 group-hover:text-[#52B788] group-hover:translate-x-0.5 transition-all flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </Link>
+          </Link>
+        </div>
 
         {/* Search + filter bar */}
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 mb-5 space-y-2.5">
@@ -407,15 +423,15 @@ export default function Dashboard() {
               </svg>
               <input
                 className="input pl-9 text-sm w-full"
-                placeholder="Search by document type or filename..."
+                placeholder={t('dashboard.searchPlaceholder')}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
             </div>
-            <button type="submit" className="btn-primary text-sm px-4">Search</button>
+            <button type="submit" className="btn-primary text-sm px-4">{t('dashboard.search')}</button>
             {isFiltered && (
               <button type="button" onClick={handleClearSearch} className="text-sm px-3 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                Clear
+                {t('dashboard.clear')}
               </button>
             )}
           </form>
@@ -423,10 +439,10 @@ export default function Dashboard() {
           {/* Risk filters */}
           <div className="flex gap-2 flex-wrap">
             {[
-              { label: 'All',    val: '',       dot: null },
-              { label: 'High',   val: 'HIGH',   dot: 'bg-red-400' },
-              { label: 'Medium', val: 'MEDIUM', dot: 'bg-yellow-400' },
-              { label: 'Low',    val: 'LOW',    dot: 'bg-green-400' },
+              { label: t('dashboard.filterAll'),    val: '',       dot: null },
+              { label: t('dashboard.filterHigh'),   val: 'HIGH',   dot: 'bg-red-400' },
+              { label: t('dashboard.filterMedium'), val: 'MEDIUM', dot: 'bg-yellow-400' },
+              { label: t('dashboard.filterLow'),    val: 'LOW',    dot: 'bg-green-400' },
             ].map(({ label, val, dot }) => (
               <button
                 key={val}
@@ -447,8 +463,8 @@ export default function Dashboard() {
         {/* Results count */}
         {!loading && total > 0 && (
           <p className="text-xs text-gray-400 dark:text-gray-500 mb-3 px-1">
-            Showing {analyses.length} of {total} document{total !== 1 ? 's' : ''}
-            {isFiltered && ' (filtered)'}
+            {t('dashboard.showing')} {analyses.length} {t('dashboard.of')} {total} {total !== 1 ? t('dashboard.documents') : t('dashboard.document')}
+            {isFiltered && ` ${t('dashboard.filtered')}`}
           </p>
         )}
 
@@ -460,22 +476,22 @@ export default function Dashboard() {
         ) : loadError ? (
           <div className="bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 rounded-2xl px-5 py-10 text-center">
             <p className="text-2xl mb-2">⚠️</p>
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Could not load your analyses</p>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('dashboard.couldNotLoad')}</p>
             <p className="text-xs text-gray-400 mb-4">{loadError}</p>
-            <button onClick={() => loadPage('', '', 1)} className="btn-primary text-sm">Try again</button>
+            <button onClick={() => loadPage('', '', 1)} className="btn-primary text-sm">{t('dashboard.tryAgain')}</button>
           </div>
         ) : analyses.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-5 py-16 text-center">
             <p className="text-5xl mb-4">📄</p>
             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-              {isFiltered ? 'No results found' : 'No analyses yet'}
+              {isFiltered ? t('dashboard.noResults') : t('dashboard.noDocsTitle')}
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-              {isFiltered ? 'Try a different search term or remove the filter.' : 'Upload your first document to get started.'}
+              {isFiltered ? t('dashboard.noResultsSub') : t('dashboard.noDocsSub')}
             </p>
             {isFiltered
-              ? <button onClick={handleClearSearch} className="btn-primary text-sm">Clear filter</button>
-              : <Link to="/upload" className="btn-primary text-sm">Analyse a document</Link>
+              ? <button onClick={handleClearSearch} className="btn-primary text-sm">{t('dashboard.clearFilter')}</button>
+              : <Link to="/upload" className="btn-primary text-sm">{t('dashboard.analyseFirst')}</Link>
             }
           </div>
         ) : (
@@ -531,7 +547,7 @@ export default function Dashboard() {
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                    Load more ({total - analyses.length} remaining)
+                    {t('dashboard.loadMore')} ({total - analyses.length} {t('dashboard.remaining')})
                   </button>
                 )}
               </div>
@@ -540,7 +556,7 @@ export default function Dashboard() {
             {/* End of list indicator */}
             {!hasMore && analyses.length > PAGE_SIZE && (
               <p className="text-center text-xs text-gray-300 dark:text-gray-600 mt-5 py-2">
-                All {total} documents shown
+                {t('dashboard.allShown').replace('{n}', total)}
               </p>
             )}
           </>

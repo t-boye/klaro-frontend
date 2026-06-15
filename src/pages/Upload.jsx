@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import Spinner from '../components/Spinner';
 import UpgradeModal from '../components/UpgradeModal';
 import { clearSession, getUser } from '../lib/auth';
+import { useLang } from '../context/LangContext';
 
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
@@ -40,18 +41,19 @@ async function extractDocxText(file) {
   return result.value;
 }
 
-const LOCAL_LANG_PLANS = ['individual', 'professional', 'business'];
+const LOCAL_LANG_PLANS = ['pay_per_doc', 'individual', 'professional', 'business'];
 
 export default function Upload() {
   const navigate = useNavigate();
   const fileRef  = useRef();
   const user     = getUser();
+  const { t, lang } = useLang();
   const canUseLocalLang = LOCAL_LANG_PLANS.includes(user?.plan);
 
   const [mode, setMode]           = useState('upload');
   const [text, setText]           = useState('');
   const [filename, setFilename]   = useState('');
-  const [language, setLanguage]   = useState('en');
+  const [language, setLanguage]   = useState(lang === 'fr' && canUseLocalLang ? 'fr' : 'en');
   const [loading, setLoading]     = useState(false);
   const [progress, setProgress]   = useState('');
   const [analyseStep, setAnalyseStep] = useState(0);
@@ -150,7 +152,7 @@ export default function Upload() {
     setLoading(true);
 
     try {
-      const data = await api.analyze.create({ text, filename, language });
+      const data = await api.analyze.create({ text, filename, language, country: user?.country || undefined });
       // Store result + id in sessionStorage so Analysis page can render immediately
       sessionStorage.setItem('klaro_analysis', JSON.stringify(data.analysis));
       sessionStorage.setItem('klaro_analysis_id', data.id);
@@ -175,8 +177,8 @@ export default function Upload() {
       <main className="max-w-2xl mx-auto px-5 py-8">
         <div className="mb-6">
           <Link to="/dashboard" className="text-sm text-brand-600 dark:text-brand-400 hover:underline">&larr; Dashboard</Link>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">Analyse a document</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Upload a PDF, Word document, or paste your text below.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{t('upload.title')}</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('upload.sub')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -245,13 +247,16 @@ export default function Upload() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Explanation language</label>
             <div className="flex flex-wrap gap-2">
               {[
-                { v: 'en',  l: 'English', local: false },
-                { v: 'tw',  l: 'Twi',     local: true },
-                { v: 'ga',  l: 'Ga',      local: true },
-                { v: 'ewe', l: 'Ewe',     local: true },
-                { v: 'dag', l: 'Dagbani', local: true },
-                { v: 'ha',  l: 'Hausa',   local: true },
-                { v: 'fan', l: 'Fante',   local: true },
+                { v: 'en',  l: 'English',  local: false },
+                { v: 'tw',  l: 'Twi',      local: true },
+                { v: 'ga',  l: 'Ga',       local: true },
+                { v: 'ewe', l: 'Ewe',      local: true },
+                { v: 'dag', l: 'Dagbani',  local: true },
+                { v: 'ha',  l: 'Hausa',    local: true },
+                { v: 'fan', l: 'Fante',    local: true },
+                { v: 'sw',  l: 'Swahili',  local: true },
+                { v: 'fr',  l: 'French',   local: true },
+                { v: 'ar',  l: 'Arabic',   local: true },
               ].map(({ v, l, local }) => {
                 const locked = local && !canUseLocalLang;
                 return (
@@ -278,13 +283,13 @@ export default function Upload() {
                 Local language explanations require an <button type="button" onClick={() => setShowUpgrade(true)} className="underline font-medium">Individual plan or above</button>.
               </p>
             )}
-            {['ga', 'dag', 'ha'].includes(language) && (
+            {['ga', 'dag', 'ha', 'ar'].includes(language) && (
               <div className="flex items-start gap-2 mt-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-3 py-2.5">
                 <svg className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p className="text-xs text-blue-700 dark:text-blue-300">
-                  <span className="font-semibold">Heads up:</span> Your document will be fully analysed, but clause explanations will be in <span className="font-semibold">English</span> — {language === 'ga' ? 'Ga' : language === 'dag' ? 'Dagbani' : 'Hausa'} text support is limited. Voice reading will use your device's built-in voice instead of a native {language === 'ga' ? 'Ga' : language === 'dag' ? 'Dagbani' : 'Hausa'} voice.
+                  <span className="font-semibold">Heads up:</span> Your document will be fully analysed in English then translated — {{ ga: 'Ga', dag: 'Dagbani', ha: 'Hausa', ar: 'Arabic' }[language]} text support uses a translation step. Voice reading will use your device's built-in voice.
                 </p>
               </div>
             )}
@@ -330,12 +335,12 @@ export default function Upload() {
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <button type="submit" className="btn-primary w-full text-base py-4" disabled={loading || !text.trim()}>
-            {loading ? 'Analysing…' : 'Analyse document'}
+            {loading ? t('common.loading') : t('upload.btn')}
           </button>
         </form>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          Klaro explains documents. It does not give legal advice. Consult a qualified Ghana lawyer for advice on what to do.
+          Klaro explains documents. It does not give legal advice. Consult a qualified lawyer in your country for advice on what to do.
         </p>
       </main>
     </div>

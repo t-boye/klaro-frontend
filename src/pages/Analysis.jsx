@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar';
 import ClauseCard from '../components/ClauseCard';
 import { useVoiceReader } from '../hooks/useVoiceReader';
 
-const LANG_LABELS = { en: 'English', tw: 'Twi', ga: 'Ga', ewe: 'Ewe', dag: 'Dagbani', ha: 'Hausa', fan: 'Fante' };
+const LANG_LABELS = { en: 'English', tw: 'Twi', ga: 'Ga', ewe: 'Ewe', dag: 'Dagbani', ha: 'Hausa', fan: 'Fante', sw: 'Swahili', fr: 'French', ar: 'Arabic' };
 
 const RISK_CONFIG = {
   HIGH:   { label: 'High Risk', color: '#ef4444', bg: '#fef2f2', border: '#fecaca', icon: '🔴', textColor: 'text-red-700',   badgeBg: 'bg-red-100',   badgeBorder: 'border-red-200'   },
@@ -742,7 +742,7 @@ export default function Analysis() {
                   : 'Now reading'}
               </p>
               <p className="text-xs text-gray-200 font-medium truncate">
-                {voice.preview || (voice.status === 'loading' ? 'Fetching voice from GhanaNLP…' : '')}
+                {voice.preview || (voice.status === 'loading' ? 'Preparing audio…' : '')}
               </p>
             </div>
 

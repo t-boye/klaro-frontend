@@ -24,6 +24,29 @@ const PLAN_INFO = {
 
 const PAYMENT_METHOD_LABELS = { card: 'Card', mobile_money: 'Mobile Money', bank: 'Bank' };
 
+const SUPPORTED_COUNTRIES = [
+  { code: 'GH', name: 'Ghana',         flag: '🇬🇭' },
+  { code: 'NG', name: 'Nigeria',        flag: '🇳🇬' },
+  { code: 'ZA', name: 'South Africa',   flag: '🇿🇦' },
+  { code: 'KE', name: 'Kenya',          flag: '🇰🇪' },
+  { code: 'RW', name: 'Rwanda',         flag: '🇷🇼' },
+  { code: 'CI', name: "Côte d'Ivoire", flag: '🇨🇮' },
+  { code: 'SN', name: 'Senegal',        flag: '🇸🇳' },
+  { code: 'EG', name: 'Egypt',          flag: '🇪🇬' },
+  { code: 'TZ', name: 'Tanzania',       flag: '🇹🇿' },
+];
+
+const CURRENCY_SYMBOLS = {
+  GHS: 'GH₵', NGN: '₦', ZAR: 'R', KES: 'KSh', RWF: 'RWF', XOF: 'CFA', EGP: 'EGP', TZS: 'TZS',
+};
+const COUNTRY_CURRENCIES = {
+  GH: 'GHS', NG: 'NGN', ZA: 'ZAR', KE: 'KES', RW: 'RWF', CI: 'XOF', SN: 'XOF', EG: 'EGP', TZ: 'TZS',
+};
+const COUNTRY_LAWYER_LABELS = {
+  GH: 'Ghana', NG: 'Nigerian', ZA: 'South African', KE: 'Kenyan', RW: 'Rwandan',
+  CI: 'Ivorian', SN: 'Senegalese', EG: 'Egyptian', TZ: 'Tanzanian',
+};
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function Profile() {
@@ -34,6 +57,7 @@ export default function Profile() {
   const [name,            setName]            = useState(currentUser?.full_name || '');
   const [email,           setEmail]           = useState('');
   const [lang,            setLang]            = useState(currentUser?.language_preference || 'en');
+  const [country,         setCountry]         = useState(currentUser?.country || 'GH');
   const [gender,          setGender]          = useState('');
   const [avatar,          setAvatar]          = useState(currentUser?.avatar || 'male1');
   const [saving,          setSaving]          = useState(false);
@@ -50,6 +74,7 @@ export default function Profile() {
         setName(data.user.full_name || '');
         setEmail(data.user.email || '');
         setLang(data.user.language_preference || 'en');
+        setCountry(data.user.country || 'GH');
         const g = data.user.gender || '';
         setGender(g);
         setAvatar(data.user.avatar || getDefaultAvatar(g));
@@ -82,6 +107,7 @@ export default function Profile() {
         language_preference: lang,
         avatar,
         gender:              gender || undefined,
+        country,
       });
       setSession(getToken(), {
         ...currentUser,
@@ -89,6 +115,7 @@ export default function Profile() {
         language_preference: data.user.language_preference,
         avatar:              data.user.avatar,
         gender:              data.user.gender,
+        country:             data.user.country,
       });
       setSaveMsg('Profile saved successfully');
       setTimeout(() => setSaveMsg(''), 3000);
@@ -221,16 +248,36 @@ export default function Profile() {
             </div>
           </div>
 
+          {/* Country */}
+          <div className="card">
+            <h2 className="font-semibold text-gray-900 dark:text-white mb-1">Your country</h2>
+            <p className="text-xs text-gray-400 mb-3">Sets your currency for payments and local law context for document analysis</p>
+            <div className="grid grid-cols-3 gap-2">
+              {SUPPORTED_COUNTRIES.map(({ code, name, flag }) => (
+                <button key={code} type="button" onClick={() => setCountry(code)}
+                  className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl border text-center transition-all text-xs font-medium ${
+                    country === code
+                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-brand-200 bg-white dark:bg-gray-800'
+                  }`}>
+                  <span className="text-lg">{flag}</span>
+                  <span>{name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Language */}
           <div className="card">
             <h2 className="font-semibold text-gray-900 dark:text-white mb-3">Preferred language</h2>
             <p className="text-xs text-gray-400 mb-3">Documents will be explained in this language by default</p>
             <div className="flex flex-wrap gap-2">
               {[
-                { v: 'en',  l: 'English' }, { v: 'tw',  l: 'Twi' },
-                { v: 'ga',  l: 'Ga' },      { v: 'ewe', l: 'Ewe' },
-                { v: 'dag', l: 'Dagbani' }, { v: 'ha',  l: 'Hausa' },
-                { v: 'fan', l: 'Fante' },
+                { v: 'en',  l: 'English' },  { v: 'tw',  l: 'Twi' },
+                { v: 'ga',  l: 'Ga' },       { v: 'ewe', l: 'Ewe' },
+                { v: 'dag', l: 'Dagbani' },  { v: 'ha',  l: 'Hausa' },
+                { v: 'fan', l: 'Fante' },    { v: 'sw',  l: 'Swahili' },
+                { v: 'fr',  l: 'French' },   { v: 'ar',  l: 'Arabic' },
               ].map(({ v, l }) => (
                 <button key={v} type="button" onClick={() => setLang(v)}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
@@ -276,7 +323,7 @@ export default function Profile() {
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">GH₵ {Number(p.amount_ghs).toFixed(2)}</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{CURRENCY_SYMBOLS[COUNTRY_CURRENCIES[country] || 'GHS'] || 'GH₵'} {Number(p.amount_ghs).toFixed(2)}</p>
                     <span className={`text-xs font-medium ${p.status === 'success' ? 'text-green-600' : 'text-yellow-600'}`}>
                       {p.status === 'success' ? 'Paid' : p.status}
                     </span>
@@ -298,7 +345,7 @@ export default function Profile() {
 
         <p className="text-center text-xs text-gray-400 mt-8 px-4">
           Klaro explains documents. It does not give legal advice.
-          For legal advice, consult a qualified Ghana lawyer.
+          For legal advice, consult a qualified {COUNTRY_LAWYER_LABELS[country] || 'local'} lawyer.
         </p>
       </main>
     </div>
