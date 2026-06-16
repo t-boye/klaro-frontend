@@ -75,7 +75,7 @@ const _audioCache = new Map();
 // of the session and go directly to Web Speech instead of waiting every time.
 let _ghanaNLPFailCount  = 0;
 let _ghanaNLPDisabled   = false;
-const GHANANLP_TIMEOUT_MS  = 3000; // reduced from 6000 — fail faster
+const GHANANLP_TIMEOUT_MS  = 8000; // wait up to 8s — GhanaNLP can be slow
 const GHANANLP_FAIL_LIMIT  = 2;
 function recordGhanaNLPFailure() {
   _ghanaNLPFailCount++;
