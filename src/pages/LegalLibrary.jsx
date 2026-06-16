@@ -159,14 +159,12 @@ ${sectionsHtml}
       <Navbar onLogout={() => { clearSession(); navigate('/'); }} wide />
       {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
 
-      {/* Page header */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+      {/* Page header — desktop only */}
+      <div className="hidden sm:block bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-5xl mx-auto px-5 py-8">
           <div className="text-center mb-5">
             <div className="inline-flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white text-base">
-                📚
-              </div>
+              <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white text-base">📚</div>
               <span className="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest">{t('library.badge')}</span>
             </div>
             <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-1">{t('library.title')}</h1>
@@ -174,8 +172,6 @@ ${sectionsHtml}
               {t('library.subtitle').replace('{country}', countryInfo?.name || '')}
             </p>
           </div>
-
-          {/* Country pill — from profile */}
           <div className="flex justify-center">
             <span className="inline-flex items-center gap-2 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-full">
               <span>{countryInfo?.flag}</span>
@@ -187,36 +183,27 @@ ${sectionsHtml}
         </div>
       </div>
 
-      <main className="max-w-5xl mx-auto px-5 sm:px-5 py-4 sm:py-6">
+      <main className="max-w-5xl mx-auto px-4 sm:px-5 py-3 sm:py-6">
 
-        {/* Mobile: horizontal scroll chips */}
-        <div className="sm:hidden overflow-x-auto -mx-5 px-5 pb-3 mb-1">
-          <div className="flex gap-2" style={{ minWidth: 'max-content' }}>
-            {CATEGORIES.map(cat => {
-              const isActive = selectedField === cat.field;
-              return (
-                <button
-                  key={cat.field}
-                  onClick={() => loadGuide(cat.field)}
-                  className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl border text-left transition-all flex-shrink-0 ${
-                    isActive
-                      ? 'bg-[#1B4332] border-[#1B4332] text-white shadow-sm'
-                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
-                  }`}
-                >
-                  <span className="text-lg leading-none">{cat.icon}</span>
-                  <div className="min-w-0">
-                    <p className={`text-xs font-bold whitespace-nowrap ${isActive ? 'text-white' : 'text-gray-800 dark:text-white'}`}>
-                      {cat.label}
-                    </p>
-                    <p className={`text-xs whitespace-nowrap ${isActive ? 'text-[#52B788]' : 'text-gray-400 dark:text-gray-500'}`}>
-                      {cat.desc}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+        {/* Mobile: 2-column compact grid */}
+        <div className="sm:hidden grid grid-cols-2 gap-2 mb-3">
+          {CATEGORIES.map(cat => {
+            const isActive = selectedField === cat.field;
+            return (
+              <button
+                key={cat.field}
+                onClick={() => loadGuide(cat.field)}
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left transition-all ${
+                  isActive
+                    ? 'bg-[#1B4332] border-[#1B4332] text-white'
+                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                <span className="text-lg leading-none flex-shrink-0">{cat.icon}</span>
+                <span className="text-xs font-semibold truncate">{cat.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Desktop: category grid */}
@@ -250,33 +237,33 @@ ${sectionsHtml}
           <div id="guide-panel" className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
 
             {/* Guide header */}
-            <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xl">{selectedCat?.icon}</span>
-                  <h2 className="font-bold text-lg text-gray-900 dark:text-white">{selectedCat?.label}</h2>
+            <div className="px-4 sm:px-6 py-3.5 sm:py-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-lg sm:text-xl flex-shrink-0">{selectedCat?.icon}</span>
+                <div className="min-w-0">
+                  <h2 className="font-bold text-sm sm:text-lg text-gray-900 dark:text-white leading-tight">{selectedCat?.label}</h2>
+                  {guide && !loading && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500 truncate hidden sm:block">
+                      {guide.countryName} · Researched with live law sources · {new Date(guide.generatedAt).toLocaleDateString('en-GB')}
+                    </p>
+                  )}
+                  {loading && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500 hidden sm:block">
+                      {t('library.loadingHeader').replace('{country}', countryInfo?.name || '')}
+                    </p>
+                  )}
                 </div>
-                {guide && (
-                  <p className="text-xs text-gray-400 dark:text-gray-500">
-                    {guide.countryName} · Researched with live law sources · {new Date(guide.generatedAt).toLocaleDateString('en-GB')}
-                  </p>
-                )}
-                {loading && (
-                  <p className="text-xs text-gray-400 dark:text-gray-500">
-                    {t('library.loadingHeader').replace('{country}', countryInfo?.name || '')}
-                  </p>
-                )}
               </div>
 
               {guide && !loading && (
                 <button
                   onClick={downloadGuide}
-                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="flex-shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-2 text-xs font-semibold border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  {t('library.downloadPdf')}
+                  <span className="hidden sm:inline">{t('library.downloadPdf')}</span>
                 </button>
               )}
             </div>
@@ -313,13 +300,13 @@ ${sectionsHtml}
                   <div key={i}>
                     <button
                       onClick={() => setOpenSection(openSection === i ? null : i)}
-                      className="w-full px-6 py-4 flex items-center justify-between gap-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                      className="w-full px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between gap-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                     >
                       <span className="font-semibold text-sm text-gray-900 dark:text-white">{section.heading}</span>
                       <ChevronDown open={openSection === i} />
                     </button>
                     {openSection === i && (
-                      <div className="px-6 pb-5">
+                      <div className="px-4 sm:px-6 pb-4 sm:pb-5">
                         <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
                           {section.content}
                         </p>
@@ -344,7 +331,7 @@ ${sectionsHtml}
 
             {/* Disclaimer footer */}
             {!loading && guide && (
-              <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700">
+              <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700">
                 <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
                   {t('library.disclaimer').replace('{country}', guide.countryName)}
                 </p>

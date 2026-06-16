@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getUser } from '../lib/auth';
 import ThemeToggle from './ThemeToggle';
@@ -36,7 +36,7 @@ function NavPill({ to, children }) {
 
 // ─── Mobile bottom tab ───────────────────────────────────────────────────────
 
-function BottomTab({ to, label, icon, onClick, forceActive = false }) {
+function BottomTab({ to, label, icon, onClick, forceActive = false, dimmed = false }) {
   const { pathname } = useLocation();
   const active = forceActive || (to ? pathname === to : false);
   const Tag = to ? Link : 'button';
@@ -44,7 +44,7 @@ function BottomTab({ to, label, icon, onClick, forceActive = false }) {
     <Tag
       {...(to ? { to } : {})}
       onClick={onClick}
-      className="flex flex-col items-center justify-center gap-1 flex-1 py-2 min-w-0"
+      className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 min-w-0 transition-opacity duration-200 ${dimmed ? 'opacity-30 pointer-events-none' : ''}`}
     >
       <span className={`flex items-center justify-center w-10 h-7 rounded-xl transition-all duration-150
         ${active ? 'bg-[#1B4332]/10 dark:bg-[#52B788]/15' : ''}`}>
@@ -115,12 +115,15 @@ const Icon = {
 export default function Navbar({ onLogout }) {
   const user  = getUser();
   const { lang, setLang, t } = useLang();
+  const { pathname } = useLocation();
   const [open, setOpen]         = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
   const plan     = user?.plan || 'trial';
   const badge    = PLAN_BADGE[plan] || PLAN_BADGE.trial;
   const avatarId = user?.avatar || 'male1';
+
+  useEffect(() => { setOpen(false); setMoreOpen(false); }, [pathname]);
 
   function close()     { setOpen(false); }
   function closeMore() { setMoreOpen(false); }
@@ -133,7 +136,7 @@ export default function Navbar({ onLogout }) {
 
           {/* Logo */}
           <Link to="/dashboard" className="flex-shrink-0 flex items-center">
-            <img src="/assets/logos/logo.png" alt="Klaro" className="h-8 object-contain" />
+            <img src="/assets/logos/logo.png" alt="Klaro" className="h-10 object-contain" />
           </Link>
 
           {/* Desktop center nav */}
@@ -213,20 +216,11 @@ export default function Navbar({ onLogout }) {
               </span>
             </div>
 
-            {/* Navigation — shown in dropdown for mobile, secondary on desktop */}
+            {/* Account links */}
             <div className="p-2">
-              <p className="px-3 pt-1 pb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                Menu
-              </p>
               <div className="space-y-0.5">
-                <MenuRow to="/dashboard" icon={Icon.grid}     label={t('nav.dashboard')}     onClick={close} />
-                <MenuRow to="/upload"    icon={Icon.doc}      label={t('nav.analyseDoc')}    onClick={close} />
-                <MenuRow to="/chat"      icon={Icon.chat}     label={t('nav.chat')}          onClick={close} />
-                <MenuRow to="/library"   icon={Icon.book}     label={t('nav.lawLibrary')}    onClick={close} />
-                <MenuRow to="/templates" icon={Icon.template} label={t('nav.templateBuilder')} onClick={close} />
-                <MenuRow to="/lawyers"   icon={Icon.lawyer}   label={t('nav.findLawyer')}    onClick={close} />
-                <MenuRow to="/profile"   icon={Icon.user}     label={t('nav.profile')}       onClick={close} />
-                <MenuRow to="/about"     icon={Icon.info}     label="About Klaro"            onClick={close} />
+                <MenuRow to="/profile" icon={Icon.user} label={t('nav.profile')} onClick={close} />
+                <MenuRow to="/about"   icon={Icon.info} label="About Klaro"      onClick={close} />
               </div>
             </div>
 
@@ -283,10 +277,10 @@ export default function Navbar({ onLogout }) {
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-100 dark:border-gray-800"
            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="flex items-center h-14 px-2">
-          <BottomTab to="/dashboard" label={t('nav.dashboard')} icon={Icon.grid} />
-          <BottomTab to="/upload"    label={t('nav.analyse')}   icon={Icon.doc} />
-          <BottomTab to="/chat"      label={t('nav.chat')}      icon={Icon.chat} />
-          <BottomTab to="/library"   label={t('nav.library')}   icon={Icon.book} />
+          <BottomTab to="/dashboard" label={t('nav.dashboard')} icon={Icon.grid}  dimmed={moreOpen} />
+          <BottomTab to="/upload"    label={t('nav.analyse')}   icon={Icon.doc}   dimmed={moreOpen} />
+          <BottomTab to="/chat"      label={t('nav.chat')}      icon={Icon.chat}  dimmed={moreOpen} />
+          <BottomTab to="/library"   label={t('nav.library')}   icon={Icon.book}  dimmed={moreOpen} />
           <BottomTab
             label="More"
             icon={Icon.more}

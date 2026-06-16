@@ -339,8 +339,9 @@ export default function Analysis() {
   const currentLangCode = analysis.language || lang;
   const langOrder      = COUNTRY_LANGS[userCountry] || Object.keys(LANG_LABELS);
   const orderedLangs   = [currentLangCode, ...langOrder.filter(l => l !== currentLangCode)];
-  const visibleLangs   = showAllLangs ? orderedLangs : orderedLangs.slice(0, 5);
-  const hiddenCount    = orderedLangs.length - 5;
+  const LANG_SHOW = 4;
+  const visibleLangs   = showAllLangs ? orderedLangs : orderedLangs.slice(0, LANG_SHOW);
+  const hiddenCount    = orderedLangs.length - LANG_SHOW;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -494,8 +495,7 @@ export default function Analysis() {
 
           {/* Language switcher */}
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 no-print">
-            <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Translate analysis</p>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="flex flex-col gap-1.5">
               {visibleLangs.map(code => {
                 const label = LANG_LABELS[code];
                 const isCurrent = code === currentLangCode;
@@ -505,33 +505,36 @@ export default function Analysis() {
                     key={code}
                     disabled={isCurrent || rerunning}
                     onClick={() => handleRerun(code)}
-                    className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-colors text-left ${
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-medium transition-colors ${
                       isCurrent
-                        ? 'bg-brand-600 text-white border-brand-600 cursor-default'
+                        ? 'bg-[#1B4332] text-white border-[#1B4332]'
                         : rerunning
                         ? 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                        : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-brand-400 hover:text-brand-700 hover:bg-brand-50 dark:hover:bg-brand-900/20'
+                        : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-[#52B788] hover:text-[#1B4332] dark:hover:text-[#52B788] hover:bg-[#52B788]/5'
                     }`}
                   >
-                    {isLoading ? '⏳...' : isCurrent ? `✓ ${label}` : label}
+                    <span>{isLoading ? 'Translating…' : label}</span>
+                    {isCurrent && <span className="text-[10px] opacity-70">current</span>}
+                    {isLoading && <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
                   </button>
                 );
               })}
+              {!showAllLangs && hiddenCount > 0 && (
+                <button onClick={() => setShowAllLangs(true)}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 text-xs font-medium text-gray-400 dark:text-gray-500 hover:border-[#52B788] hover:text-[#1B4332] dark:hover:text-[#52B788] transition-colors">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                  {hiddenCount} more languages
+                </button>
+              )}
+              {showAllLangs && (
+                <button onClick={() => setShowAllLangs(false)}
+                  className="w-full text-center text-xs text-gray-400 hover:text-gray-600 py-1 transition-colors">
+                  ↑ Show fewer
+                </button>
+              )}
             </div>
-            {!showAllLangs && hiddenCount > 0 && (
-              <button onClick={() => setShowAllLangs(true)}
-                className="mt-2 w-full text-xs text-brand-600 dark:text-brand-400 hover:underline text-center py-1">
-                + {hiddenCount} more languages
-              </button>
-            )}
-            {showAllLangs && (
-              <button onClick={() => setShowAllLangs(false)}
-                className="mt-2 w-full text-xs text-gray-400 hover:text-gray-600 text-center py-1">
-                Show fewer
-              </button>
-            )}
             {rerunError && <p className="text-xs text-red-500 mt-2">{rerunError}</p>}
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 leading-relaxed">Re-analysis takes 30–60 seconds.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 leading-relaxed">Re-analysis takes 30–60 seconds.</p>
           </div>
 
           {/* Ask Klaro */}
@@ -725,36 +728,26 @@ export default function Analysis() {
           )}
 
           {/* Mobile-only: language switcher */}
-          <div className="md:hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 no-print">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Translate analysis</p>
-            <div className="flex flex-wrap gap-2">
-              {visibleLangs.map(code => {
-                const label = LANG_LABELS[code];
-                const isCurrent = code === currentLangCode;
-                const isLoading = rerunning && rerunLang === code;
-                return (
-                  <button key={code} disabled={isCurrent || rerunning} onClick={() => handleRerun(code)}
-                    className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${
-                      isCurrent ? 'bg-brand-600 text-white border-brand-600 cursor-default'
-                      : rerunning ? 'border-gray-200 text-gray-300 cursor-not-allowed'
-                      : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-brand-400 hover:text-brand-600'
-                    }`}>
-                    {isLoading ? '⏳...' : isCurrent ? `✓ ${label}` : label}
-                  </button>
-                );
-              })}
-              {!showAllLangs && hiddenCount > 0 && (
-                <button onClick={() => setShowAllLangs(true)}
-                  className="text-xs px-3 py-1.5 rounded-lg border border-dashed border-brand-300 dark:border-brand-700 font-medium text-brand-600 dark:text-brand-400 transition-colors hover:bg-brand-50 dark:hover:bg-brand-900/20">
-                  + {hiddenCount} more
-                </button>
-              )}
-              {showAllLangs && (
-                <button onClick={() => setShowAllLangs(false)}
-                  className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 font-medium text-gray-400 transition-colors hover:text-gray-600">
-                  Show fewer
-                </button>
-              )}
+          <div className="md:hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 no-print">
+            <div className="overflow-x-auto -mx-4 px-4">
+              <div className="flex gap-2 pb-1" style={{ minWidth: 'max-content' }}>
+                {orderedLangs.map(code => {
+                  const label = LANG_LABELS[code];
+                  const isCurrent = code === currentLangCode;
+                  const isLoading = rerunning && rerunLang === code;
+                  return (
+                    <button key={code} disabled={isCurrent || rerunning} onClick={() => handleRerun(code)}
+                      className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${
+                        isCurrent ? 'bg-[#1B4332] text-white border-[#1B4332]'
+                        : rerunning ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                        : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-[#52B788] hover:text-[#1B4332] dark:hover:text-[#52B788]'
+                      }`}>
+                      {isLoading && <span className="w-2.5 h-2.5 border-2 border-current/30 border-t-current rounded-full animate-spin" />}
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             {rerunError && <p className="text-xs text-red-500 mt-2">{rerunError}</p>}
           </div>

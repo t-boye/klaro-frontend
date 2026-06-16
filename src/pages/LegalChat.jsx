@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar';
 import { useLang } from '../context/LangContext';
 
 const LANG_LABELS = {
-  en: 'English', tw: 'Twi', ga: 'Ga', ewe: 'Ewe', dag: 'Dagbani', ha: 'Hausa', fan: 'Fante',
+  en: 'English', fr: 'Français', tw: 'Twi', ewe: 'Ewe', fan: 'Fante', sw: 'Swahili', ar: 'عربي',
 };
 
 const PLAN_LIMITS = {
@@ -17,14 +17,32 @@ const PLAN_LIMITS = {
   business:     { max: null, label: 'Unlimited' },
 };
 
-const QUICK_PROMPTS = [
-  { icon: '🏠', text: 'Can my landlord evict me without giving notice?' },
-  { icon: '💼', text: 'What rights do I have if my employer fires me without reason?' },
-  { icon: '📝', text: 'Is a contract valid without a lawyer or stamp?' },
-  { icon: '💰', text: 'What is the maximum rental advance a landlord can charge?' },
-  { icon: '👶', text: 'What are my rights as a parent in a child custody case?' },
-  { icon: '🏗️', text: 'What documents do I need to check before buying land in Ghana?' },
-];
+const QUICK_PROMPTS = {
+  en: [
+    { icon: '🏠', text: 'Can my landlord evict me without giving notice?' },
+    { icon: '💼', text: 'What rights do I have if my employer fires me without reason?' },
+    { icon: '📝', text: 'Is a contract valid without a lawyer or stamp?' },
+    { icon: '💰', text: 'What is the maximum rental advance a landlord can charge?' },
+    { icon: '👶', text: 'What are my rights as a parent in a child custody case?' },
+    { icon: '🏗️', text: 'What documents do I need to check before buying land?' },
+  ],
+  fr: [
+    { icon: '🏠', text: 'Mon propriétaire peut-il m\'expulser sans préavis?' },
+    { icon: '💼', text: 'Quels droits ai-je si mon employeur me licencie sans raison?' },
+    { icon: '📝', text: 'Un contrat est-il valide sans avocat ni tampon?' },
+    { icon: '💰', text: 'Quelle avance de loyer maximale un propriétaire peut-il exiger?' },
+    { icon: '👶', text: 'Quels sont mes droits en tant que parent dans une garde d\'enfant?' },
+    { icon: '🏗️', text: 'Quels documents vérifier avant d\'acheter un terrain?' },
+  ],
+  tw: [
+    { icon: '🏠', text: 'M\'owura fie betumi ama me adi kwan a onnyaa me kra?' },
+    { icon: '💼', text: 'Deen na m\'ani da ho sɛ m\'adwumayɛfo pam me a wonni amumɔyɛ?' },
+    { icon: '📝', text: 'Apam bi tumi yɛ nokware a onni lawyerni anaa stamp?' },
+    { icon: '💰', text: 'Deen na ɛhia owura fie no sɛ obɛtumi atɔ atoɔde?' },
+    { icon: '👶', text: 'Deen na m\'ani da ho wɔ m\'ba no ho ɔhaw mu?' },
+    { icon: '🏗️', text: 'Nsɛm bɛn na mehwehwɛ ansa na mɛtɔ asase?' },
+  ],
+};
 
 function MessageBubble({ msg }) {
   const isUser = msg.role === 'user';
@@ -44,19 +62,29 @@ function MessageBubble({ msg }) {
       </div>
 
       {/* Bubble */}
-      <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-        isUser
-          ? 'bg-[#1B4332] text-white rounded-tr-sm'
-          : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-sm shadow-sm'
-      }`}>
-        {msg.text.split('\n').map((line, i) => (
-          <React.Fragment key={i}>
-            {line}
-            {i < msg.text.split('\n').length - 1 && <br />}
-          </React.Fragment>
-        ))}
-        {msg.error && (
-          <p className="text-red-300 text-xs mt-1">{msg.error}</p>
+      <div className="max-w-[80%] flex flex-col gap-1">
+        <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+          isUser
+            ? 'bg-[#1B4332] text-white rounded-tr-sm'
+            : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-sm shadow-sm'
+        }`}>
+          {msg.text.split('\n').map((line, i) => (
+            <React.Fragment key={i}>
+              {line}
+              {i < msg.text.split('\n').length - 1 && <br />}
+            </React.Fragment>
+          ))}
+          {msg.error && (
+            <p className="text-red-300 text-xs mt-1">{msg.error}</p>
+          )}
+        </div>
+        {msg.limited && (
+          <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+            <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Basic mode — <Link to="/payment" className="underline font-medium">upgrade</Link> for premium responses</span>
+          </div>
         )}
       </div>
     </div>
@@ -82,12 +110,12 @@ function TypingIndicator() {
 
 export default function LegalChat() {
   const navigate  = useNavigate();
-  const { t }     = useLang();
+  const { t, lang: uiLang } = useLang();
   const [messages, setMessages] = useState([]);
   const [input,    setInput]    = useState('');
-  const [respLang, setRespLang] = useState('en');
+  const [respLang, setRespLang] = useState(uiLang === 'fr' ? 'fr' : 'en');
   const [loading,  setLoading]  = useState(false);
-  const [quota,    setQuota]    = useState(null); // { remaining, max, plan }
+  const [quota,    setQuota]    = useState(null);
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
 
@@ -106,7 +134,12 @@ export default function LegalChat() {
 
     try {
       const data = await api.legalChat(trimmed, respLang);
-      setMessages(prev => [...prev, { role: 'assistant', text: data.answer, id: Date.now() + 1 }]);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        text: data.answer,
+        id: Date.now() + 1,
+        limited: data.limited || false,
+      }]);
       if (data.remaining !== null && data.remaining !== undefined) {
         setQuota({ remaining: data.remaining, max: data.limit, plan: data.plan });
       }
@@ -191,20 +224,20 @@ export default function LegalChat() {
         <div className="flex-1 flex flex-col min-h-[400px]">
           {empty ? (
             /* Empty state — quick prompts */
-            <div className="flex-1 flex flex-col items-center justify-center gap-6 py-8">
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 py-6">
               <div className="text-center">
-                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">{t('chat.emptyTitle')}</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-0.5">{t('chat.emptyTitle')}</p>
                 <p className="text-gray-400 dark:text-gray-500 text-xs">{t('chat.quickPrompts')}</p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-xl">
-                {QUICK_PROMPTS.map((p, i) => (
+              <div className="grid grid-cols-2 gap-1.5 w-full">
+                {(QUICK_PROMPTS[respLang] || QUICK_PROMPTS.en).map((p, i) => (
                   <button
                     key={i}
                     onClick={() => sendMessage(p.text)}
-                    className="flex items-start gap-2.5 text-left p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-[#52B788] hover:bg-[#52B788]/5 transition-colors text-sm text-gray-700 dark:text-gray-300 group"
+                    className="flex items-start gap-1.5 text-left p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-[#52B788] hover:bg-[#52B788]/5 transition-colors text-gray-700 dark:text-gray-300 group"
                   >
-                    <span className="text-lg flex-shrink-0 mt-0.5">{p.icon}</span>
-                    <span className="group-hover:text-[#1B4332] dark:group-hover:text-[#52B788] transition-colors">{p.text}</span>
+                    <span className="text-sm flex-shrink-0 mt-px">{p.icon}</span>
+                    <span className="text-xs leading-snug group-hover:text-[#1B4332] dark:group-hover:text-[#52B788] transition-colors">{p.text}</span>
                   </button>
                 ))}
               </div>

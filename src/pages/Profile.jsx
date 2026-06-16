@@ -66,6 +66,7 @@ export default function Profile() {
   const [showUpgrade,     setShowUpgrade]     = useState(false);
   const [payments,        setPayments]        = useState([]);
   const [paymentsLoading, setPaymentsLoading] = useState(true);
+  const [paymentsOpen,    setPaymentsOpen]    = useState(false);
 
   useEffect(() => {
     api.license()
@@ -187,33 +188,61 @@ export default function Profile() {
         <form onSubmit={handleSave} className="space-y-5">
 
           {/* Personal details */}
-          <div className="card space-y-4">
-            <h2 className="font-semibold text-gray-900 dark:text-white">Personal details</h2>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full name</label>
-              <input className="input" type="text" placeholder="e.g. Kofi Mensah" value={name} onChange={(e) => setName(e.target.value)} />
+          <div className="card overflow-hidden">
+            <div className="flex items-center gap-2.5 mb-5 pb-4 border-b border-gray-100 dark:border-gray-700">
+              <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="font-bold text-gray-900 dark:text-white text-sm">Personal details</h2>
+                <p className="text-xs text-gray-400">Your name and contact info</p>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email address <span className="text-gray-400 text-xs">(optional)</span></label>
-              <input className="input" type="email" placeholder="kofi@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-              <p className="text-xs text-gray-400 mt-1">Used for payment receipts and notifications</p>
-            </div>
+            <div className="space-y-4">
+              <div className="relative">
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Full name</label>
+                <div className="relative">
+                  <input className="input pr-10" type="text" placeholder="e.g. Kofi Mensah" value={name} onChange={(e) => setName(e.target.value)} />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                  </span>
+                </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Gender <span className="text-gray-400 text-xs">(helps assign your avatar)</span></label>
-              <div className="flex gap-2 flex-wrap">
-                {[
-                  { v: 'male',             l: 'Male' },
-                  { v: 'female',           l: 'Female' },
-                  { v: 'prefer_not_to_say',l: 'Prefer not to say' },
-                ].map(({ v, l }) => (
-                  <button key={v} type="button" onClick={() => handleGenderChange(v)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${gender === v ? 'bg-brand-600 text-white border-brand-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-brand-300'}`}>
-                    {l}
-                  </button>
-                ))}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                  Email address <span className="normal-case font-normal text-gray-400">(optional)</span>
+                </label>
+                <div className="relative">
+                  <input className="input pr-10" type="email" placeholder="kofi@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                  </span>
+                </div>
+                <p className="text-xs text-gray-400 mt-1.5 flex items-center gap-1">
+                  <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  Used for payment receipts and notifications
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Gender</label>
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { v: 'male',              l: '👨 Male' },
+                    { v: 'female',            l: '👩 Female' },
+                    { v: 'prefer_not_to_say', l: '— Prefer not to say' },
+                  ].map(({ v, l }) => (
+                    <button key={v} type="button" onClick={() => handleGenderChange(v)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${gender === v ? 'bg-brand-600 text-white border-brand-600 shadow-sm' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-brand-300'}`}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-400 mt-1.5">Helps assign your avatar</p>
               </div>
             </div>
           </div>
@@ -304,32 +333,88 @@ export default function Profile() {
           </button>
         </form>
 
-        {/* Payment history */}
-        <div className="card mt-5">
-          <h2 className="font-semibold text-gray-900 dark:text-white mb-3">Payment history</h2>
-          {paymentsLoading ? (
-            <div className="space-y-2 animate-pulse">{[1, 2].map(i => <div key={i} className="h-10 bg-gray-100 dark:bg-gray-700 rounded-lg" />)}</div>
-          ) : payments.length === 0 ? (
-            <p className="text-sm text-gray-400">No payments yet.</p>
-          ) : (
-            <div className="divide-y divide-gray-100 dark:divide-gray-700">
-              {payments.map((p) => (
-                <div key={p.id} className="py-3 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 capitalize">{p.plan_name || p.plan} plan</p>
-                    <p className="text-xs text-gray-400">
-                      {new Date(p.created_at).toLocaleDateString('en-GH', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      {p.payment_method ? ` · ${PAYMENT_METHOD_LABELS[p.payment_method] || p.payment_method}` : ''}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{CURRENCY_SYMBOLS[COUNTRY_CURRENCIES[country] || 'GHS'] || 'GH₵'} {Number(p.amount_ghs).toFixed(2)}</p>
-                    <span className={`text-xs font-medium ${p.status === 'success' ? 'text-green-600' : 'text-yellow-600'}`}>
-                      {p.status === 'success' ? 'Paid' : p.status}
-                    </span>
-                  </div>
+        {/* Payment history — collapsible */}
+        <div className="card mt-5 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setPaymentsOpen(o => !o)}
+            className="w-full flex items-center justify-between gap-3 text-left group"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 dark:text-white text-sm">Payment history</p>
+                <p className="text-xs text-gray-400">
+                  {paymentsLoading ? 'Loading…' : payments.length === 0 ? 'No payments yet' : `${payments.length} payment${payments.length !== 1 ? 's' : ''}`}
+                </p>
+              </div>
+            </div>
+            <svg
+              className={`w-5 h-5 text-gray-400 transition-transform duration-200 flex-shrink-0 ${paymentsOpen ? 'rotate-180' : ''}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {paymentsOpen && (
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+              {paymentsLoading ? (
+                <div className="space-y-3 animate-pulse">
+                  {[1, 2].map(i => (
+                    <div key={i} className="flex items-center justify-between">
+                      <div className="space-y-1.5">
+                        <div className="h-3.5 w-28 bg-gray-100 dark:bg-gray-700 rounded" />
+                        <div className="h-3 w-20 bg-gray-100 dark:bg-gray-700 rounded" />
+                      </div>
+                      <div className="space-y-1.5 text-right">
+                        <div className="h-3.5 w-16 bg-gray-100 dark:bg-gray-700 rounded" />
+                        <div className="h-3 w-10 bg-gray-100 dark:bg-gray-700 rounded ml-auto" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : payments.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-6 text-center">
+                  <span className="text-3xl">🧾</span>
+                  <p className="text-sm text-gray-400">No payments yet. Upgrade to get started.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100 dark:divide-gray-700/60">
+                  {payments.map((p) => (
+                    <div key={p.id} className="py-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-sm ${
+                          p.status === 'success' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20'
+                        }`}>
+                          {p.status === 'success' ? '✅' : '⏳'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 capitalize truncate">
+                            {p.plan_name || p.plan} plan
+                          </p>
+                          <p className="text-xs text-gray-400 truncate">
+                            {new Date(p.created_at).toLocaleDateString('en-GH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {p.payment_method ? ` · ${PAYMENT_METHOD_LABELS[p.payment_method] || p.payment_method}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm font-bold text-gray-900 dark:text-white">
+                          {CURRENCY_SYMBOLS[COUNTRY_CURRENCIES[country] || 'GHS'] || 'GH₵'} {Number(p.amount_ghs).toFixed(2)}
+                        </p>
+                        <span className={`text-xs font-semibold ${p.status === 'success' ? 'text-green-600' : 'text-yellow-600'}`}>
+                          {p.status === 'success' ? 'Paid' : p.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
