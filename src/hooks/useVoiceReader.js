@@ -109,20 +109,13 @@ async function playGhanaNLP(text, language, rate, { onStart, onEnd, onError }) {
   if (!audioBuffer) {
     const { audio } = await api.tts(text, language);
     const arrayBuf  = base64ToArrayBuffer(audio);
-
-    // Decode using a temporary offline context — doesn't require user gesture
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) throw new Error('AudioContext not supported');
-    const tmpCtx = new Ctx();
-    try {
-      audioBuffer = await tmpCtx.decodeAudioData(arrayBuf);
-      _audioCache.set(key, audioBuffer);
-    } finally {
-      tmpCtx.close().catch(() => {});
-    }
+    // Decode through the shared context — no extra AudioContext created/destroyed
+    const ctx = getAudioContext();
+    if (!ctx) throw new Error('AudioContext not supported');
+    audioBuffer = await ctx.decodeAudioData(arrayBuf);
+    _audioCache.set(key, audioBuffer);
   }
 
-  // Play through the shared (already unlocked) AudioContext
   const ctx = getAudioContext();
   if (!ctx) throw new Error('AudioContext not available');
   await ctx.resume();
@@ -148,26 +141,24 @@ async function playGhanaNLP(text, language, rate, { onStart, onEnd, onError }) {
   };
 }
 
-// ── Background prefetch for queue items ───────────────────────────────────────
+// ── Background prefetch — next 3 items only ───────────────────────────────────
+// Fetches and decodes the next few clips so they're ready before playItem reaches
+// them. Limited to 3 so we don't fire dozens of TTS calls for long documents when
+// the user might stop after the first clause.
 async function prefetchQueue(items, language) {
-  const BATCH = 2;
-  for (let i = 0; i < items.length; i += BATCH) {
-    await Promise.allSettled(
-      items.slice(i, i + BATCH).map(async (item) => {
-        const key = cacheKey(item.text, language);
-        if (_audioCache.has(key)) return;
-        try {
-          const { audio }   = await api.tts(item.text, language);
-          const arrayBuf    = base64ToArrayBuffer(audio);
-          const Ctx         = window.AudioContext || window.webkitAudioContext;
-          const tmpCtx      = new Ctx();
-          const audioBuffer = await tmpCtx.decodeAudioData(arrayBuf);
-          tmpCtx.close().catch(() => {});
-          _audioCache.set(key, audioBuffer);
-        } catch {}
-      })
-    );
-  }
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  await Promise.allSettled(
+    items.slice(0, 3).map(async (item) => {
+      const key = cacheKey(item.text, language);
+      if (_audioCache.has(key)) return;
+      try {
+        const { audio }   = await api.tts(item.text, language);
+        const audioBuffer = await ctx.decodeAudioData(base64ToArrayBuffer(audio));
+        _audioCache.set(key, audioBuffer);
+      } catch {}
+    })
+  );
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
