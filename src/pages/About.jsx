@@ -466,7 +466,7 @@ export default function About() {
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '32px 24px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
           <p style={{ color: 'rgba(255,255,255,0.20)', fontSize: 13, margin: 0 }}>
             © {new Date().getFullYear()}{' '}
             <a href="https://wa.me/233542510400" target="_blank" rel="noopener noreferrer" style={{ color: '#52B788', fontWeight: 700, textDecoration: 'none' }}>
