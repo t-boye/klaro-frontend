@@ -14,7 +14,6 @@ import PreviewBanner   from './components/PreviewBanner';
 import Landing         from './pages/Landing';
 import Auth            from './pages/Auth';
 import ResetPassword   from './pages/ResetPassword';
-import Onboarding      from './pages/Onboarding';
 import Dashboard       from './pages/Dashboard';
 import Upload          from './pages/Upload';
 import Analysis        from './pages/Analysis';
@@ -44,11 +43,6 @@ function InactivityGuard() {
 
 function PrivateRoute({ children }) {
   return isLoggedIn() ? children : <Navigate to="/auth" replace />;
-}
-
-function OnboardingRoute({ children }) {
-  if (!isLoggedIn()) return <Navigate to="/auth" replace />;
-  return children;
 }
 
 function AdminRoute({ children }) {
@@ -81,7 +75,6 @@ export default function App() {
             <Route path="/terms"            element={<Terms />} />
             <Route path="/about"            element={<About />} />
             <Route path="/shared/:token"    element={<SharedAnalysis />} />
-            <Route path="/onboarding"       element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
             <Route path="/dashboard"        element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/upload"           element={<PrivateRoute><Upload /></PrivateRoute>} />
             <Route path="/analysis/:id"     element={<PrivateRoute><Analysis /></PrivateRoute>} />

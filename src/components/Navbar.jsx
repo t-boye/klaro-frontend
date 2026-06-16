@@ -36,9 +36,9 @@ function NavPill({ to, children }) {
 
 // ─── Mobile bottom tab ───────────────────────────────────────────────────────
 
-function BottomTab({ to, label, icon, onClick }) {
+function BottomTab({ to, label, icon, onClick, forceActive = false }) {
   const { pathname } = useLocation();
-  const active = to ? pathname === to : false;
+  const active = forceActive || (to ? pathname === to : false);
   const Tag = to ? Link : 'button';
   return (
     <Tag
@@ -115,13 +115,15 @@ const Icon = {
 export default function Navbar({ onLogout }) {
   const user  = getUser();
   const { lang, setLang, t } = useLang();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen]         = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const plan     = user?.plan || 'trial';
   const badge    = PLAN_BADGE[plan] || PLAN_BADGE.trial;
   const avatarId = user?.avatar || 'male1';
 
-  function close() { setOpen(false); }
+  function close()     { setOpen(false); }
+  function closeMore() { setMoreOpen(false); }
 
   return (
     <>
@@ -288,10 +290,97 @@ export default function Navbar({ onLogout }) {
           <BottomTab
             label="More"
             icon={Icon.more}
-            onClick={() => setOpen(o => !o)}
+            onClick={() => setMoreOpen(o => !o)}
+            forceActive={moreOpen}
           />
         </div>
       </div>
+
+      {/* ── Mobile drop-up "More" sheet ──────────────────────────────────── */}
+      {moreOpen && (
+        <>
+          <div className="lg:hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={closeMore} />
+          <div className="lg:hidden fixed bottom-14 inset-x-0 z-50 bg-white dark:bg-gray-800 rounded-t-2xl shadow-2xl border-t border-gray-200/60 dark:border-gray-700/60 overflow-hidden"
+               style={{ maxHeight: '70vh', overflowY: 'auto', animation: 'slideUp 0.22s ease-out' }}>
+            <style>{`@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`}</style>
+
+            {/* User card */}
+            <div className="px-4 pt-4 pb-3 bg-gradient-to-br from-[#1B4332]/[0.06] to-[#52B788]/[0.04] dark:from-[#1B4332]/40 dark:to-[#52B788]/10 border-b border-gray-100 dark:border-gray-700/60">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-11 h-11 rounded-2xl overflow-hidden ring-2 ring-[#52B788]/25 flex-shrink-0">
+                  <AvatarIcon avatarId={avatarId} size={44} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-gray-900 dark:text-white text-sm leading-snug truncate">
+                    {user?.full_name || 'My Account'}
+                  </p>
+                  <p className="text-gray-400 dark:text-gray-500 text-xs truncate mt-0.5">
+                    {user?.email || user?.phone}
+                  </p>
+                </div>
+              </div>
+              <span
+                className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full"
+                style={{ background: badge.bg, color: badge.text }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                {badge.label} plan
+              </span>
+            </div>
+
+            {/* Extra nav links */}
+            <div className="p-2">
+              <p className="px-3 pt-1 pb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">More</p>
+              <div className="space-y-0.5">
+                <MenuRow to="/templates" icon={Icon.template} label={t('nav.templateBuilder')} onClick={closeMore} />
+                <MenuRow to="/lawyers"   icon={Icon.lawyer}   label={t('nav.findLawyer')}      onClick={closeMore} />
+                <MenuRow to="/profile"   icon={Icon.user}     label={t('nav.profile')}         onClick={closeMore} />
+                <MenuRow to="/about"     icon={Icon.info}     label="About Klaro"              onClick={closeMore} />
+              </div>
+            </div>
+
+            {/* Preferences */}
+            <div className="border-t border-gray-100 dark:border-gray-700/60 p-2">
+              <p className="px-3 pt-1 pb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Preferences</p>
+              <div className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+                <div className="flex items-center gap-2.5">
+                  {Icon.globe}
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Language</span>
+                </div>
+                <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5 gap-0.5">
+                  {[{ code: 'en', iso: 'gb', label: 'EN' }, { code: 'fr', iso: 'fr', label: 'FR' }].map(({ code, iso, label }) => (
+                    <button
+                      key={code}
+                      onClick={() => setLang(code)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-bold transition-all ${
+                        lang === code
+                          ? 'bg-white dark:bg-gray-600 shadow-sm text-gray-800 dark:text-white'
+                          : 'text-gray-400 dark:text-gray-500 hover:text-gray-600'
+                      }`}
+                    >
+                      <img src={`https://flagcdn.com/20x15/${iso}.png`} width="18" height="13" alt={label} className="rounded-sm" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+                <div className="flex items-center gap-2.5">
+                  {Icon.moon}
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Appearance</span>
+                </div>
+                <ThemeToggle />
+              </div>
+            </div>
+
+            {/* Sign out */}
+            <div className="border-t border-gray-100 dark:border-gray-700/60 p-2 pb-4">
+              <MenuRow icon={Icon.logout} label={t('nav.logOut')} onClick={() => { closeMore(); onLogout(); }} danger />
+            </div>
+
+          </div>
+        </>
+      )}
 
     </>
   );

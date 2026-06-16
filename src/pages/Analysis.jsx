@@ -1,12 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
-import { clearSession } from '../lib/auth';
+import { clearSession, getUser } from '../lib/auth';
 import Navbar from '../components/Navbar';
 import ClauseCard from '../components/ClauseCard';
 import { useVoiceReader } from '../hooks/useVoiceReader';
 
-const LANG_LABELS = { en: 'English', tw: 'Twi', ga: 'Ga', ewe: 'Ewe', dag: 'Dagbani', ha: 'Hausa', fan: 'Fante', sw: 'Swahili', fr: 'French', ar: 'Arabic' };
+// Only languages with real TTS voice support (GhanaNLP or reliable Web Speech)
+// ga/dag/ha removed — no native voice, all fall back to generic English
+const LANG_LABELS = { en: 'English', tw: 'Twi', ewe: 'Ewe', fan: 'Fante', sw: 'Swahili', fr: 'French', ar: 'Arabic' };
+
+const COUNTRY_LANGS = {
+  GH: ['en', 'tw', 'ewe', 'fan', 'sw', 'fr', 'ar'],
+  NG: ['en', 'sw', 'fr', 'ar', 'tw', 'ewe', 'fan'],
+  ZA: ['en', 'sw', 'fr', 'ar', 'tw', 'ewe', 'fan'],
+  KE: ['en', 'sw', 'fr', 'ar', 'tw', 'ewe', 'fan'],
+  RW: ['fr', 'en', 'sw', 'ar', 'tw', 'ewe', 'fan'],
+  CI: ['fr', 'en', 'sw', 'ar', 'fan', 'tw', 'ewe'],
+  SN: ['fr', 'en', 'sw', 'ar', 'tw', 'ewe', 'fan'],
+  EG: ['ar', 'en', 'fr', 'sw', 'tw', 'ewe', 'fan'],
+  TZ: ['sw', 'en', 'fr', 'ar', 'tw', 'ewe', 'fan'],
+};
 
 const RISK_CONFIG = {
   HIGH:   { label: 'High Risk', color: '#ef4444', bg: '#fef2f2', border: '#fecaca', icon: '🔴', textColor: 'text-red-700',   badgeBg: 'bg-red-100',   badgeBorder: 'border-red-200'   },
@@ -124,6 +138,7 @@ export default function Analysis() {
   const [rerunLang,    setRerunLang]    = useState('');
   const [rerunning,    setRerunning]    = useState(false);
   const [rerunError,   setRerunError]   = useState('');
+  const [showAllLangs, setShowAllLangs] = useState(false);
 
   const voice = useVoiceReader();
 
@@ -320,6 +335,13 @@ export default function Analysis() {
 
   const summaryIsActive = voice.activeId === 'summary' || (voice.activeId || '').startsWith('warning-');
 
+  const userCountry    = getUser()?.country || 'GH';
+  const currentLangCode = analysis.language || lang;
+  const langOrder      = COUNTRY_LANGS[userCountry] || Object.keys(LANG_LABELS);
+  const orderedLangs   = [currentLangCode, ...langOrder.filter(l => l !== currentLangCode)];
+  const visibleLangs   = showAllLangs ? orderedLangs : orderedLangs.slice(0, 5);
+  const hiddenCount    = orderedLangs.length - 5;
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <style>{`
@@ -474,8 +496,9 @@ export default function Analysis() {
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 no-print">
             <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Translate analysis</p>
             <div className="grid grid-cols-2 gap-1.5">
-              {Object.entries(LANG_LABELS).map(([code, label]) => {
-                const isCurrent = code === (analysis.language || lang);
+              {visibleLangs.map(code => {
+                const label = LANG_LABELS[code];
+                const isCurrent = code === currentLangCode;
                 const isLoading = rerunning && rerunLang === code;
                 return (
                   <button
@@ -495,6 +518,18 @@ export default function Analysis() {
                 );
               })}
             </div>
+            {!showAllLangs && hiddenCount > 0 && (
+              <button onClick={() => setShowAllLangs(true)}
+                className="mt-2 w-full text-xs text-brand-600 dark:text-brand-400 hover:underline text-center py-1">
+                + {hiddenCount} more languages
+              </button>
+            )}
+            {showAllLangs && (
+              <button onClick={() => setShowAllLangs(false)}
+                className="mt-2 w-full text-xs text-gray-400 hover:text-gray-600 text-center py-1">
+                Show fewer
+              </button>
+            )}
             {rerunError && <p className="text-xs text-red-500 mt-2">{rerunError}</p>}
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 leading-relaxed">Re-analysis takes 30–60 seconds.</p>
           </div>
@@ -693,8 +728,9 @@ export default function Analysis() {
           <div className="md:hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 no-print">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Translate analysis</p>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(LANG_LABELS).map(([code, label]) => {
-                const isCurrent = code === (analysis.language || lang);
+              {visibleLangs.map(code => {
+                const label = LANG_LABELS[code];
+                const isCurrent = code === currentLangCode;
                 const isLoading = rerunning && rerunLang === code;
                 return (
                   <button key={code} disabled={isCurrent || rerunning} onClick={() => handleRerun(code)}
@@ -707,6 +743,18 @@ export default function Analysis() {
                   </button>
                 );
               })}
+              {!showAllLangs && hiddenCount > 0 && (
+                <button onClick={() => setShowAllLangs(true)}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-dashed border-brand-300 dark:border-brand-700 font-medium text-brand-600 dark:text-brand-400 transition-colors hover:bg-brand-50 dark:hover:bg-brand-900/20">
+                  + {hiddenCount} more
+                </button>
+              )}
+              {showAllLangs && (
+                <button onClick={() => setShowAllLangs(false)}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 font-medium text-gray-400 transition-colors hover:text-gray-600">
+                  Show fewer
+                </button>
+              )}
             </div>
             {rerunError && <p className="text-xs text-red-500 mt-2">{rerunError}</p>}
           </div>

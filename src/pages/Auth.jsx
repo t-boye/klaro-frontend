@@ -56,8 +56,7 @@ export default function Auth() {
           try {
             const data = await api.auth.googleAuth(response.credential);
             setSession(data.token, data.user);
-            const onboarded = localStorage.getItem('klaro_onboarded');
-            navigate(onboarded ? '/dashboard' : '/onboarding');
+            navigate('/dashboard');
           } catch (e) {
             setError(e.message);
           } finally {
@@ -95,8 +94,7 @@ export default function Auth() {
         data = await api.auth.login(email.trim(), password);
       }
       setSession(data.token, data.user);
-      const onboarded = localStorage.getItem('klaro_onboarded');
-      navigate(onboarded ? '/dashboard' : '/onboarding');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message);
     } finally {

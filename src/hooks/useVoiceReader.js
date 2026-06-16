@@ -14,9 +14,6 @@ const VOICE_CHAIN = {
   tw:  ['en-GH', 'en-NG', 'en-ZA', 'en-GB', 'en'],
   ewe: ['en-GH', 'en-NG', 'en-ZA', 'en-GB', 'en'],
   fan: ['en-GH', 'en-NG', 'en-GB', 'en'],
-  ga:  ['en-GH', 'en-NG', 'en-ZA', 'en-GB', 'en'],
-  dag: ['ha', 'ha-NG', 'en-NG', 'en-GH', 'en'],
-  ha:  ['ha', 'ha-NG', 'en-NG', 'en-GH', 'en'],
   sw:  ['sw', 'sw-KE', 'sw-TZ', 'en-KE', 'en'],
   fr:  ['fr-FR', 'fr-BE', 'fr-CH', 'fr', 'en'],
   ar:  ['ar-EG', 'ar-SA', 'ar', 'en'],
@@ -72,6 +69,21 @@ function pickVoice(lang) {
 // Keys: "lang::text". Values: Blob URLs.
 // Cleared when the page unloads (sessionStorage-lifetime).
 const _audioCache = new Map();
+
+// ── GhanaNLP circuit breaker ──────────────────────────────────────────────────
+// After 2 consecutive failures (timeout or error), skip GhanaNLP for the rest
+// of the session and go directly to Web Speech instead of waiting every time.
+let _ghanaNLPFailCount  = 0;
+let _ghanaNLPDisabled   = false;
+const GHANANLP_TIMEOUT_MS  = 3000; // reduced from 6000 — fail faster
+const GHANANLP_FAIL_LIMIT  = 2;
+function recordGhanaNLPFailure() {
+  _ghanaNLPFailCount++;
+  if (_ghanaNLPFailCount >= GHANANLP_FAIL_LIMIT) _ghanaNLPDisabled = true;
+}
+function recordGhanaNLPSuccess() {
+  _ghanaNLPFailCount = 0;
+}
 
 function cacheKey(text, lang) { return `${lang}::${text.trim()}`; }
 
@@ -165,15 +177,15 @@ export function useVoiceReader() {
     const onEnd   = () => { if (!cancelledRef.current) playItem(idx + 1); };
     const onError = () => { if (!cancelledRef.current) playItem(idx + 1); };
 
-    if (GHANA_NLP_LANGS.has(lang)) {
+    if (GHANA_NLP_LANGS.has(lang) && !_ghanaNLPDisabled) {
       setStatus('loading');
-      // 6-second timeout — if GhanaNLP is too slow, fall back to Web Speech immediately
       let timedOut = false;
       const fallbackTimer = setTimeout(() => {
         if (cancelledRef.current) return;
         timedOut = true;
+        recordGhanaNLPFailure();
         playWebSpeech(item, lang, shortPrev, onEnd, onError);
-      }, 6000);
+      }, GHANANLP_TIMEOUT_MS);
       try {
         const cleanup = await playGhanaNLP(item.text, lang, rateRef.current, {
           onStart: () => { setStatus('playing'); setActiveId(item.id); setPreview(shortPrev); },
@@ -182,9 +194,11 @@ export function useVoiceReader() {
         });
         clearTimeout(fallbackTimer);
         if (cancelledRef.current || timedOut) { cleanup(); return; }
+        recordGhanaNLPSuccess();
         stopCurrentRef.current = cleanup;
       } catch {
         clearTimeout(fallbackTimer);
+        if (!timedOut) recordGhanaNLPFailure();
         if (!timedOut && !cancelledRef.current) {
           playWebSpeech(item, lang, shortPrev, onEnd, onError);
         }
